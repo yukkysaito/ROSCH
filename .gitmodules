@@ -1,3 +1,0 @@
-[submodule "RT-ROS"]
-	path = RT-ROS
-	url = git://github.com/CPFL/RT-ROS.git
