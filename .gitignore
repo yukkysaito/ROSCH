@@ -1,0 +1,18 @@
+# GNU global tags
+GTAGS
+GRTAGS
+GSYMS
+GPATH
+
+# editor backup files
+*~
+\#*\#
+
+# ROSCH
+*.[ao]
+*.so
+*.so.*
+*.lib
+*.ko
+*.cmd
+.tmp_versions
