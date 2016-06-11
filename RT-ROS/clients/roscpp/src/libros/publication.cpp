@@ -204,7 +204,8 @@ void Publication::addSubscriberLink(const SubscriberLinkPtr& sub_link)
       return;
     }
 
-   std::cout << "\"" << sub_link->getDestinationCallerID() << "\"" << " please input priority : ";
+#if 0
+    std::cout << "\"" << sub_link->getDestinationCallerID() << "\"" << " please input priority : ";
     int priority;
     std::cin >> priority;
     sub_link->setPriority(priority);
@@ -219,7 +220,9 @@ void Publication::addSubscriberLink(const SubscriberLinkPtr& sub_link)
         subscriber_links_.push_back(priority_subscriber_links_.top());
         priority_subscriber_links_.pop();
     }
-
+#else
+    subscriber_links_.push_back(sub_link);
+#endif
 
     if (sub_link->isIntraprocess())
     {
