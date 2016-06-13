@@ -1,8 +1,8 @@
 #!/bin/sh
 script_dir=$(cd $(dirname ${BASH_SOURCE:-$0}); pwd)
 
-mkdir $script_dir/clients/roscpp/build
-cd $script_dir/clients/roscpp/build/
+mkdir $script_dir/../clients/roscpp/build
+cd $script_dir/../clients/roscpp/build/
 cmake ..
 make
 if [ ! -e /opt/ros/indigo/lib/libroscpp.so.backup ]; then

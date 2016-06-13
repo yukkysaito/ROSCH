@@ -15,4 +15,6 @@ GPATH
 *.lib
 *.ko
 *.cmd
+*.order
+*.symvers
 .tmp_versions
