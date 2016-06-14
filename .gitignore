@@ -12,9 +12,10 @@ GPATH
 *.[ao]
 *.so
 *.so.*
+*.order
+*.symvers
+*.mod.c
 *.lib
 *.ko
 *.cmd
-*.order
-*.symvers
 .tmp_versions
