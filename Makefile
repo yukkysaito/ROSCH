@@ -1,4 +1,4 @@
-obj = RT-ROS RESCH
+obj = RESCH RT-ROS
 
 .PHONY: all
 all: $(obj)

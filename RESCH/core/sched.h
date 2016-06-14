@@ -8,7 +8,7 @@
 
 /* return pointer to the resch task descriptor. */
 #define resch_task_ptr(rid)	(&resch_task[rid])
-/* return the reversed value of the given priority. 
+/* return the reversed value of the given priority.
    this is used by priority arrays. */
 #define prio_index(prio)	(RESCH_PRIO_MAX - prio)
 
@@ -21,8 +21,8 @@ struct prio_array {
 	struct list_head queue[RESCH_PRIO_MAX];
 };
 
-/* kernel thread structure that calls sched_setscheduler() exported 
-   from the Linux kernel to change the scheduling policy and the 
+/* kernel thread structure that calls sched_setscheduler() exported
+   from the Linux kernel to change the scheduling policy and the
    priority of the tasks.
    it is necessary because the Linux kernel does not allow user processes
    without root permissions to change the real-time priority.
@@ -62,6 +62,9 @@ extern resch_task_t resch_task[NR_RT_TASKS];
 extern struct local_object lo[NR_RT_CPUS + 1];
 
 /* APIs. */
+/* ROS APIs. */
+int api_set_node(int, unsigned long);
+/* General APIs. */
 int api_init(void);
 int api_exit(int);
 int api_run(int, unsigned long);

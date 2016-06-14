@@ -1,6 +1,6 @@
 /*
  *  libresch.c: the library for the RESCH core
- * 	
+ *
  * 	Defines application programming interfaces (APIs) for RESCH.
  */
 
@@ -125,6 +125,92 @@ static inline int __test(unsigned long cmd, unsigned long val)
 }
 
 /************************************************************
+ * ROS APIs for real-time scheduling.
+ ************************************************************/
+typedef struct node {
+    const char* node_name;
+    int pid;
+    int is_exist;
+    float wcet;
+    float laxity;
+    float global_wcet;
+    struct node* root;
+    struct node* child;
+    struct node* next;
+} node_t;
+
+void node_init(node_t* node)
+{
+    node->node_name = NULL;
+    node->pid = 0;
+    node->is_exist = 0;
+    node->wcet = 0.0;
+    node->laxity = 0.0;
+    node->global_wcet = 0.0;
+    node->root = NULL;
+    node->child = NULL;
+    node->next = NULL;
+}
+
+int ros_rt_init(const char* node_name)
+{
+    node_t node;
+    node_init(&node);
+    node.node_name = node_name;
+    printf("This is %s\n", node.node_name);
+
+    return rt_init();
+}
+int ros_rt_exit(void)
+{
+    return rt_exit();
+}
+int ros_rt_run(struct timespec ts)
+{
+    return rt_run(ts);
+}
+int ros_rt_wait_period(void)
+{
+    return rt_wait_period();
+}
+int ros_rt_wait_interval(struct timespec ts)
+{
+    return rt_wait_interval(ts);
+}
+int ros_rt_set_period(struct timespec ts)
+{
+    return rt_set_period(ts);
+}
+int ros_rt_set_deadline(struct timespec ts)
+{
+    return rt_set_deadline(ts);
+}
+int ros_rt_set_wcet(struct timespec ts)
+{
+    return rt_set_wcet(ts);
+}
+int ros_rt_set_runtime(struct timespec ts)
+{
+    return rt_set_runtime(ts);
+}
+int ros_rt_set_priority(unsigned long prio)
+{
+    return rt_set_priority(prio);
+}
+int ros_rt_set_scheduler(unsigned long sched_policy)
+{
+    return rt_set_scheduler(sched_policy);
+}
+int ros_rt_background(void)
+{
+    return rt_background();
+}
+int ros_rt_set_node(unsigned long node_index)
+{
+    return (__api_int(API_SET_NODE, node_index) == RES_FAULT) ? 0 : 1;
+}
+
+/************************************************************
  * PORT-I APIs for preemptive periodic real-time scheduling.
  ************************************************************/
 
@@ -224,7 +310,7 @@ int rt_background(void)
 }
 
 /*******************************************************
- * PORT-II APIs for event-driven asynchrous scheduling. 
+ * PORT-II APIs for event-driven asynchrous scheduling.
  *******************************************************/
 
 int rt_sleep(struct timespec ts)
@@ -243,7 +329,7 @@ int rt_wake_up(int pid)
 }
 
 /**************************************************
- * PORT-III APIs for reservation-based scheduling. 
+ * PORT-III APIs for reservation-based scheduling.
  **************************************************/
 
 int rt_reserve_start(struct timespec ts, void (*func)(void))

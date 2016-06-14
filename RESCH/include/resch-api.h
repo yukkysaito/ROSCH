@@ -4,7 +4,7 @@
 #include <linux/sched.h>
 
 /**
- * device name. 
+ * device name.
  */
 #define RESCH_DEVNAME	"/dev/resch"
 
@@ -12,7 +12,11 @@
  * API command numbers.
  * the APIs are compliant with Portable Real-Time API (PORT).
  */
-#define API_PORT1_OFFSET	0 
+/* ROS APIs for real-time scheduling. */
+#define API_ROS_OFFSET 0
+#define API_SET_NODE	API_ROS_OFFSET + 0
+
+#define API_PORT1_OFFSET	API_ROS_OFFSET + 1
 /* PORT-I: preemptive periodic real-time scheduling. */
 #define API_INIT	 		API_PORT1_OFFSET + 0
 #define API_EXIT			API_PORT1_OFFSET + 1

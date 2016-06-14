@@ -19,6 +19,22 @@
 extern "C" {
 #endif
 
+/************************************************************
+ * ROS APIs for real-time scheduling.
+ ************************************************************/
+int ros_rt_init(const char* node_name);
+int ros_rt_set_node(unsigned long node_index);
+int ros_rt_exit(void);
+int ros_rt_run(struct timespec);
+int ros_rt_wait_period(void);
+int ros_rt_wait_interval(struct timespec);
+int ros_rt_set_period(struct timespec);
+int ros_rt_set_deadline(struct timespec);
+int ros_rt_set_wcet(struct timespec);
+int ros_rt_set_runtime(struct timespec);
+int ros_rt_set_priority(unsigned long);
+int ros_rt_set_scheduler(unsigned long);
+int ros_rt_background(void);
 
 /************************************************************
  * PORT-I APIs for preemptive periodic real-time scheduling.

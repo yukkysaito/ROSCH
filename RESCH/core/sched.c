@@ -28,7 +28,7 @@
 #include "test.h"
 
 /**
- * RESCH task descriptor. 
+ * RESCH task descriptor.
  */
 resch_task_t resch_task[NR_RT_TASKS];
 
@@ -41,7 +41,7 @@ struct local_object lo[NR_RT_CPUS + 1];
 
 /**
  * a bitmap for the process ID used in RESCH: RESCH ID (RID).
- * those RIDs range in [0, NR_RT_TASKS-1], which are different from 
+ * those RIDs range in [0, NR_RT_TASKS-1], which are different from
  * the process IDs used in Linux.
  * each process has a RESCH PID within the range of [0, NR_RT_TASKS-1].
  * if the k-th bit is set, the ID of k has been used for some process.
@@ -52,7 +52,7 @@ struct pid_map_struct pid_map;
  * a priority-ordered double-linked list, which includes all the submitted
  * tasks regardless of its running status.
  * this global list is often accessed before tasks are submitted, like
- * for response time analysis, and needs not to provide a timing-critical 
+ * for response time analysis, and needs not to provide a timing-critical
  * implementation. so we use a semaphore to lock for synchronization.
  */
 struct task_list_struct task_list;
@@ -70,7 +70,7 @@ unsigned long migration_cost = 20;
  * - task_exit is called when the task exit real-time execution.
  * - job_start is called when the task is starting a new job.
  * - job_complete is called when the task is completing the current job.
- */ 
+ */
 static struct plugin_struct {
 	void (*task_run)(resch_task_t*);
 	void (*task_exit)(resch_task_t*);
@@ -120,7 +120,7 @@ static void follow_load_balance(resch_task_t *rt)
 	cpu_now = smp_processor_id();
 	cpu_old = rt->cpu_id;
 	if (cpu_now != cpu_old) {
-		/* move to a correct active queue. 
+		/* move to a correct active queue.
 		   note that this task has no preemptee and preempter, since
 		   its job has not been started yet. */
 		active_queue_double_lock(cpu_now, cpu_old, &flags);
@@ -184,7 +184,7 @@ static void requeue_task(resch_task_t *rt, int prio_old)
 
 /**
  * insert @rt into the global list in order of priority.
- * the global list must be locked. 
+ * the global list must be locked.
  */
 static void __global_list_insert(resch_task_t *rt)
 {
@@ -199,12 +199,12 @@ static void __global_list_insert(resch_task_t *rt)
 				return; /* MUST be returned here.*/
 			}
 		}
-		/* if the global list is empty or @rt is the lowest-priority task, 
+		/* if the global list is empty or @rt is the lowest-priority task,
 		   just insert it to the tail of the global list. */
 		list_add_tail(&rt->global_entry, &task_list.head);
 	}
 	else {
-		printk(KERN_WARNING 
+		printk(KERN_WARNING
 			   "RESCH: task#%d has been in the global list.\n", rt->rid);
 	}
 }
@@ -219,7 +219,7 @@ static void __global_list_remove(resch_task_t *rt)
 		list_del_init(&rt->global_entry);
 	}
 	else {
-		printk(KERN_WARNING 
+		printk(KERN_WARNING
 			   "RESCH: task#%d has not been in the global list.\n", rt->rid);
 	}
 }
@@ -256,7 +256,7 @@ static void global_list_reinsert(resch_task_t *rt)
 }
 
 /**
- * change the priority of the given task, and save it to @rt->prio. 
+ * change the priority of the given task, and save it to @rt->prio.
  */
 static int __set_scheduler(resch_task_t *rt, int prio)
 {
@@ -284,13 +284,13 @@ static int __set_scheduler(resch_task_t *rt, int prio)
 	}
 
  out:
-	RESCH_DPRINT("task#%d changed policy to %d\n", 
+	RESCH_DPRINT("task#%d changed policy to %d\n",
 		   rt->rid, rt->task->policy);
 	return true;
 }
 
 /**
- * request the setscheduler thread to change the priority of @rt. 
+ * request the setscheduler thread to change the priority of @rt.
  * the caller will sleep until the priority is changed.
  */
 void request_set_scheduler(resch_task_t *rt, int prio)
@@ -316,7 +316,7 @@ void request_set_scheduler(resch_task_t *rt, int prio)
 
 /**
  * request the setscheduler thread to change the priority of @rt from the
- * interrupt contexts. 
+ * interrupt contexts.
  * the caller will sleep until the priority is changed.
  */
 void request_set_scheduler_interrupt(resch_task_t *rt, int prio)
@@ -394,7 +394,7 @@ static void job_release(resch_task_t *rt, unsigned long release_time)
 	/* renew the timing properties. */
 	reset_exec_time(rt);
 	rt->deadline_time = rt->release_time + rt->deadline;
-	
+
 #ifdef SCHED_DEADLINE
 	if ( rt->policy == RESCH_SCHED_EDF ){
 	    while(rt->runtime <=0){
@@ -405,7 +405,7 @@ static void job_release(resch_task_t *rt, unsigned long release_time)
 	    }
 	}
 #endif
-	
+
 }
 
 /**
@@ -433,7 +433,7 @@ static void job_start(resch_task_t *rt)
 		start_account(rt);
 	}
 
-	RESCH_DPRINT("task#%d started on CPU%d at %lu (deadline=%lu).\n", 
+	RESCH_DPRINT("task#%d started on CPU%d at %lu (deadline=%lu).\n",
 		   rt->rid, smp_processor_id(), jiffies, rt->deadline_time);
 }
 
@@ -442,7 +442,7 @@ static void job_start(resch_task_t *rt)
  */
 static void job_complete(resch_task_t *rt)
 {
-	RESCH_DPRINT("task#%d completed on CPU%d at %lu\n", 
+	RESCH_DPRINT("task#%d completed on CPU%d at %lu\n",
 		   rt->rid, smp_processor_id(), jiffies);
 	RESCH_DPRINT("task#%d spent %lu (jiffies).\n", rt->rid, exec_time(rt));
 
@@ -479,9 +479,9 @@ static void job_complete(resch_task_t *rt)
 static inline int deadline_miss(resch_task_t *rt)
 {
 	if (rt->deadline > 0 && rt->deadline_time < jiffies) {
-		RESCH_DPRINT("task#%d missed a deadline on CPU#%d.\n", 
+		RESCH_DPRINT("task#%d missed a deadline on CPU#%d.\n",
 			   rt->rid, smp_processor_id());
-		RESCH_DPRINT("deadline = %lu, jiffies = %lu.\n", 
+		RESCH_DPRINT("deadline = %lu, jiffies = %lu.\n",
 			   rt->deadline_time, jiffies);
 		rt->missed = true;
 	}
@@ -529,7 +529,7 @@ static inline void job_complete_default(resch_task_t *rt)
 }
 
 /**
- * install the given scheduler plugins. 
+ * install the given scheduler plugins.
  */
 void install_scheduler(void (*task_run_plugin)(resch_task_t*),
 					   void (*task_exit_plugin)(resch_task_t*),
@@ -559,7 +559,7 @@ void install_scheduler(void (*task_run_plugin)(resch_task_t*),
 EXPORT_SYMBOL(install_scheduler);
 
 /**
- * uninstall the scheduler plugins. 
+ * uninstall the scheduler plugins.
  */
 void uninstall_scheduler(void)
 {
@@ -629,7 +629,7 @@ EXPORT_SYMBOL(get_current_task);
 
 /**
  * return the highest-priority task actively running on the given CPU.
- * return NULL if the CPU has no ready tasks managed by Resch. 
+ * return NULL if the CPU has no ready tasks managed by Resch.
  * the active queue must be locked.
  */
 resch_task_t* active_highest_prio_task(int cpu)
@@ -647,8 +647,8 @@ resch_task_t* active_highest_prio_task(int cpu)
 	}
 #endif
 	/* the first entry must be a valid reference due to non-negative idx. */
-	return list_first_entry(&active->queue[idx], 
-							resch_task_t, 
+	return list_first_entry(&active->queue[idx],
+							resch_task_t,
 							active_entry);
 }
 EXPORT_SYMBOL(active_highest_prio_task);
@@ -656,8 +656,8 @@ EXPORT_SYMBOL(active_highest_prio_task);
 /**
  * return the task positioned at the next of @rt in the active queue.
  * return NULL if there is no next task.
- * the active queue must be locked. 
- */	
+ * the active queue must be locked.
+ */
 resch_task_t* active_next_prio_task(resch_task_t *rt)
 {
 	int idx = prio_index(rt->prio);
@@ -668,12 +668,12 @@ resch_task_t* active_next_prio_task(resch_task_t *rt)
 		if ((idx = resch_fns(active->bitmap, idx + 1, RESCH_PRIO_LONG)) < 0) {
 			return NULL;
 		}
-		return list_first_entry(&active->queue[idx], 
-								resch_task_t, 
+		return list_first_entry(&active->queue[idx],
+								resch_task_t,
 								active_entry);
 	}
-	return list_entry(rt->active_entry.next, 
-					  resch_task_t, 
+	return list_entry(rt->active_entry.next,
+					  resch_task_t,
 					  active_entry);
 }
 EXPORT_SYMBOL(active_next_prio_task);
@@ -681,8 +681,8 @@ EXPORT_SYMBOL(active_next_prio_task);
 /**
  * return the task positioned at the previous of @rt in the active queue.
  * return NULL if there is no previous task.
- * the active queue must be locked. 
- */	
+ * the active queue must be locked.
+ */
 resch_task_t* active_prev_prio_task(resch_task_t *rt)
 {
 	int idx = prio_index(rt->prio);
@@ -694,12 +694,12 @@ resch_task_t* active_prev_prio_task(resch_task_t *rt)
 			return NULL;
 		}
 		/* this imitates list_last_entry(). */
-		return list_entry(active->queue[idx].prev, 
-						  resch_task_t, 
+		return list_entry(active->queue[idx].prev,
+						  resch_task_t,
 						  active_entry);
 	}
-	return list_entry(rt->active_entry.prev, 
-					  resch_task_t, 
+	return list_entry(rt->active_entry.prev,
+					  resch_task_t,
 					  active_entry);
 }
 EXPORT_SYMBOL(active_prev_prio_task);
@@ -707,8 +707,8 @@ EXPORT_SYMBOL(active_prev_prio_task);
 /**
  * return the first task which has the given priority.
  * return NULL if the CPU has no tasks with the priority.
- * the active queue must be locked. 
- */	
+ * the active queue must be locked.
+ */
 resch_task_t* active_prio_task(int cpu, int prio)
 {
 	int idx = prio_index(prio);
@@ -723,10 +723,10 @@ resch_task_t* active_prio_task(int cpu, int prio)
 EXPORT_SYMBOL(active_prio_task);
 
 /**
- * return the task running on the given CPU, which has the num-th priority. 
- * return NULL if the CPU has no ready tasks managed by Resch. 
- * the active queue must be locked. 
- */	
+ * return the task running on the given CPU, which has the num-th priority.
+ * return NULL if the CPU has no ready tasks managed by Resch.
+ * the active queue must be locked.
+ */
 resch_task_t* active_number_task(int cpu, int num)
 {
 	int i;
@@ -746,7 +746,7 @@ resch_task_t* active_number_task(int cpu, int num)
 				return rt;
 			}
 		}
-		/* set the index for the next search. 
+		/* set the index for the next search.
 		   this also prevents an infinite loop. */
 		idx++;
 	}
@@ -758,51 +758,51 @@ EXPORT_SYMBOL(active_number_task);
 
 /**
  * return the highest-priority task submitted to RESCH.
- * the global list must be locked. 
+ * the global list must be locked.
  */
 resch_task_t* global_highest_prio_task(void)
 {
 	if (list_empty(&task_list.head)) {
 		return NULL;
 	}
-	return list_first_entry(&task_list.head, 
-							resch_task_t, 
+	return list_first_entry(&task_list.head,
+							resch_task_t,
 							global_entry);
 }
 EXPORT_SYMBOL(global_highest_prio_task);
 
 /**
- * return the task positioned at the next of @rt in the global list. 
- * the global list must be locked. 
+ * return the task positioned at the next of @rt in the global list.
+ * the global list must be locked.
  */
 resch_task_t* global_next_prio_task(resch_task_t *rt)
 {
 	if (rt->global_entry.next == &(task_list.head)) {
 		return NULL;
 	}
-	return list_entry(rt->global_entry.next, 
-					  resch_task_t, 
+	return list_entry(rt->global_entry.next,
+					  resch_task_t,
 					  global_entry);
 }
 EXPORT_SYMBOL(global_next_prio_task);
 
 /**
- * return the task positioned at the previous of @rt in the global list. 
- * the global list must be locked. 
+ * return the task positioned at the previous of @rt in the global list.
+ * the global list must be locked.
  */
 resch_task_t* global_prev_prio_task(resch_task_t *rt)
 {
 	if (rt->global_entry.prev == &(task_list.head)) {
 		return NULL;
 	}
-	return list_entry(rt->global_entry.prev, 
-					  resch_task_t, 
+	return list_entry(rt->global_entry.prev,
+					  resch_task_t,
 					  global_entry);
 }
 EXPORT_SYMBOL(global_prev_prio_task);
 
 /**
- * return the first task that has the given priority or less. 
+ * return the first task that has the given priority or less.
  * the global list must be locked.
  */
 resch_task_t* global_prio_task(int prio)
@@ -835,7 +835,7 @@ resch_task_t* global_number_task(int num)
 EXPORT_SYMBOL(global_number_task);
 
 /**
- * lock the active queue on the given CPU. 
+ * lock the active queue on the given CPU.
  */
 void active_queue_lock(int cpu, unsigned long *flags)
 {
@@ -844,7 +844,7 @@ void active_queue_lock(int cpu, unsigned long *flags)
 EXPORT_SYMBOL(active_queue_lock);
 
 /**
- * unlock the active queue on the given CPU. 
+ * unlock the active queue on the given CPU.
  */
 void active_queue_unlock(int cpu, unsigned long *flags)
 {
@@ -853,7 +853,7 @@ void active_queue_unlock(int cpu, unsigned long *flags)
 EXPORT_SYMBOL(active_queue_unlock);
 
 /**
- * lock the two active queues on the given CPUs at the same time. 
+ * lock the two active queues on the given CPUs at the same time.
  * this function may be useful on task migrations.
  */
 void active_queue_double_lock(int cpu1, int cpu2, unsigned long *flags)
@@ -864,7 +864,7 @@ void active_queue_double_lock(int cpu1, int cpu2, unsigned long *flags)
 EXPORT_SYMBOL(active_queue_double_lock);
 
 /**
- * unlock the two active queues on the given CPUs at the same time. 
+ * unlock the two active queues on the given CPUs at the same time.
  * this function may be useful on task migrations.
  */
 void active_queue_double_unlock(int cpu1, int cpu2, unsigned long *flags)
@@ -875,7 +875,7 @@ void active_queue_double_unlock(int cpu1, int cpu2, unsigned long *flags)
 EXPORT_SYMBOL(active_queue_double_unlock);
 
 /**
- * down the mutex to lock the global list. 
+ * down the mutex to lock the global list.
  */
 void global_list_down(void)
 {
@@ -884,7 +884,7 @@ void global_list_down(void)
 EXPORT_SYMBOL(global_list_down);
 
 /**
- * up the mutex to unlock the global list. 
+ * up the mutex to unlock the global list.
  */
 void global_list_up(void)
 {
@@ -893,7 +893,7 @@ void global_list_up(void)
 EXPORT_SYMBOL(global_list_up);
 
 /**
- * migrate @rt to the given CPU. 
+ * migrate @rt to the given CPU.
  */
 void migrate_task(resch_task_t *rt, int cpu_dst)
 {
@@ -903,14 +903,14 @@ void migrate_task(resch_task_t *rt, int cpu_dst)
 EXPORT_SYMBOL(migrate_task);
 
 /**
- * return the scheduling overhead in the given interval by microseconds. 
+ * return the scheduling overhead in the given interval by microseconds.
  * since we dont know the single scheduler tick cost, we pessimistically
  * assume that context switches may happen at every scheduler tick.
- * hence, the total number of context switches assumed is the sum of 
+ * hence, the total number of context switches assumed is the sum of
  * the number of job completions and the number of scheduler ticks.
  * to reduce pessimism, we also assume that the single scheduler tick
  * cost is as half as the single context switch cost, given that a kernel
- * timer interrupt does not store and load all registers but does less 
+ * timer interrupt does not store and load all registers but does less
  * than half of registers.
  * we believe this assumption is still pessimistic.
  */
@@ -921,7 +921,7 @@ unsigned long sched_overhead_cpu(int cpu, unsigned long interval)
 	unsigned long overhead = 0;
 	list_for_each_entry(rt, &task_list.head, global_entry) {
 		if (task_is_on_cpu(rt, cpu)) {
-			nr_jobs = div_round_up(interval, 
+			nr_jobs = div_round_up(interval,
 									jiffies_to_usecs(rt->period));
 			overhead += nr_jobs * (switch_cost + release_cost);
 			if (rt->migratory) {
@@ -977,7 +977,7 @@ static void set_scheduler_thread(void *__data)
 		wake_up_process(rt->setsched.caller);
 		local_irq_enable();
 	}
-}	
+}
 
 /**
  * initialize the RESCH task descriptor members.
@@ -993,7 +993,7 @@ static void resch_task_init(resch_task_t *rt, int rid)
 	for (cpu = 0; cpu < NR_RT_CPUS; cpu++) {
 		cpu_set(cpu, rt->cpumask);
 	}
-	cpumask_and(&rt->task->cpus_allowed, 
+	cpumask_and(&rt->task->cpus_allowed,
 				&rt->task->cpus_allowed, &rt->cpumask);
 
 	/* migrate the task to some CPU in range, if necessary. */
@@ -1028,7 +1028,7 @@ static void resch_task_init(resch_task_t *rt, int rid)
 }
 
 /**
- * if there are dead tasks, clear corresponding PID bitmap. 
+ * if there are dead tasks, clear corresponding PID bitmap.
  */
 static void clear_dead_tasks(void)
 {
@@ -1047,7 +1047,20 @@ static void clear_dead_tasks(void)
 /**
  * API: attach the current task to RESCH.
  * note that the current task still remains as a fair task.
- * it is turned into a real-time task when api_set_scheduler() or 
+ * it is turned into a real-time task when api_set_scheduler() or
+ * api_set_priority() is called.
+ */
+int api_set_node(int rid, unsigned long node_index)
+{
+    printk(KERN_INFO
+           "RESCH: get ROS node index:%d.\n", node_index);
+    return rid;
+}
+
+/**
+ * API: attach the current task to RESCH.
+ * note that the current task still remains as a fair task.
+ * it is turned into a real-time task when api_set_scheduler() or
  * api_set_priority() is called.
  */
 int api_init(void)
@@ -1069,7 +1082,7 @@ int api_init(void)
 	__set_bit(rid, pid_map.bitmap);
 	spin_unlock_irq(&pid_map.lock);
 
-	/* init the resch task discriptor. */ 
+	/* init the resch task discriptor. */
 	resch_task_init(&resch_task[rid], rid);
 
  out:
@@ -1119,7 +1132,7 @@ int api_exit(int rid)
 
 /**
  * API: run the current task.
- * the first job will be released when @timeout (ms) elapses. 
+ * the first job will be released when @timeout (ms) elapses.
  */
 int api_run(int rid, unsigned long timeout)
 {
@@ -1141,7 +1154,7 @@ int api_run(int rid, unsigned long timeout)
 }
 
 /**
- * API: let the current task wait for the next period. 
+ * API: let the current task wait for the next period.
  */
 int api_wait_for_period(int rid)
 {
@@ -1176,7 +1189,7 @@ int api_wait_for_interval(int rid, unsigned long period)
 }
 
 /**
- * API: set (change) the period of the current task. 
+ * API: set (change) the period of the current task.
  */
 int api_set_period(int rid, unsigned long period)
 {
@@ -1190,7 +1203,7 @@ int api_set_period(int rid, unsigned long period)
 }
 
 /**
- * API: set (change) the relative deadline of the current task. 
+ * API: set (change) the relative deadline of the current task.
  */
 int api_set_deadline(int rid, unsigned long deadline)
 {
@@ -1200,8 +1213,8 @@ int api_set_deadline(int rid, unsigned long deadline)
 }
 
 /**
- * API: set (change) the worst-case executiont time of the current task. 
- * @wcet is given by microseconds. 
+ * API: set (change) the worst-case executiont time of the current task.
+ * @wcet is given by microseconds.
  */
 int api_set_wcet(int rid, unsigned long wcet)
 {
@@ -1215,8 +1228,8 @@ int api_set_wcet(int rid, unsigned long wcet)
 }
 
 /**
- * API: set (change) the average execution time of the current task. 
- * @runtime is given by microseconds. 
+ * API: set (change) the average execution time of the current task.
+ * @runtime is given by microseconds.
  */
 int api_set_runtime(int rid, unsigned long runtime)
 {
@@ -1229,7 +1242,7 @@ int api_set_runtime(int rid, unsigned long runtime)
 }
 
 /**
- * API: set (change) the priority of the current task. 
+ * API: set (change) the priority of the current task.
  */
 int api_set_priority(int rid, unsigned long prio)
 {
@@ -1244,11 +1257,11 @@ int api_set_priority(int rid, unsigned long prio)
 	if (!set_scheduler(rt, rt->policy, prio)) {
 		return RES_FAULT;
 	}
-	return RES_SUCCESS;	
+	return RES_SUCCESS;
 }
 
 /**
- * API: set the scheduling policy for the current task. 
+ * API: set the scheduling policy for the current task.
  */
 int api_set_scheduler(int rid, unsigned long policy)
 {
@@ -1261,11 +1274,11 @@ int api_set_scheduler(int rid, unsigned long policy)
 		}
 	}
 
-	return RES_SUCCESS;	
+	return RES_SUCCESS;
 }
 
 /**
- * API: schedule the current task in background. 
+ * API: schedule the current task in background.
  */
 int api_background(int rid)
 {
@@ -1306,14 +1319,14 @@ void sched_init(void)
 	for (cpu = 0; cpu < NR_RT_CPUS; cpu++) {
 		/* the setscheduler thread. */
 		INIT_LIST_HEAD(&lo[cpu].sched_thread.list);
-		lo[cpu].sched_thread.task = 
-			kthread_create((void*)set_scheduler_thread, 
-						   (void*)(long)cpu, 
+		lo[cpu].sched_thread.task =
+			kthread_create((void*)set_scheduler_thread,
+						   (void*)(long)cpu,
 						   "resch-kthread");
 		if (lo[cpu].sched_thread.task != ERR_PTR(-ENOMEM)) {
 			kthread_bind(lo[cpu].sched_thread.task, cpu);
-			sched_setscheduler(lo[cpu].sched_thread.task, 
-							   SCHED_FIFO, 
+			sched_setscheduler(lo[cpu].sched_thread.task,
+							   SCHED_FIFO,
 							   &sp);
 			wake_up_process(lo[cpu].sched_thread.task);
 		}

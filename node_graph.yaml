@@ -1,0 +1,4 @@
+- nodename: rosout
+  nodeindex: 0
+- nodename: talker
+  nodeindex: 1

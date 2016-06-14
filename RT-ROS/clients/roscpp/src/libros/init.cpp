@@ -66,6 +66,9 @@
 
 /* RESCH */
 #include <resch/api.h>
+#define __RESCH_DEBUG__
+/* Node graph */
+#include "node_graph/node_graph.hpp"
 
 namespace ros
 {
@@ -436,7 +439,21 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
   /* RESCH
    * set real-time scheduling
    */
-  rt_init();
+    ros_rt_init(name.c_str());
+    ros_rt_set_node(get_node_index(name));
+#ifdef __RESCH_DEBUG__
+  /*
+   * remappings: mean remapping topics
+   * name: mean myself node name
+   * options: ?
+   */
+  M_string::const_iterator it = remappings.begin();
+  for (; it != remappings.end(); it++){
+      std::cout << "remmappings: " << it->first << ", " << it->second << std::endl;
+  }
+  std::cout << "name: " << name << std::endl;
+  std::cout << "options: " << options << std::endl;
+#endif /* RESCH DEBUG */
 
   if (!g_atexit_registered)
   {

@@ -65,6 +65,11 @@ static ssize_t resch_write
 	}
 
 	switch (a.api) {
+        /* PORT ROS: ROS APIs for real-time scheduling. */
+    case API_SET_NODE:
+        res = api_set_node(a.rid, a.arg.val);
+        break;
+
 		/* PORT I: preemptive periodic real-time scheduling.*/
 	case API_INIT:
 		res = api_init();
