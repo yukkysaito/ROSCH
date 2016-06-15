@@ -127,38 +127,19 @@ static inline int __test(unsigned long cmd, unsigned long val)
 /************************************************************
  * ROS APIs for real-time scheduling.
  ************************************************************/
-typedef struct node {
-    const char* node_name;
-    int pid;
-    int is_exist;
-    float wcet;
-    float laxity;
-    float global_wcet;
-    struct node* root;
-    struct node* child;
-    struct node* next;
-} node_t;
-
-void node_init(node_t* node)
-{
-    node->node_name = NULL;
-    node->pid = 0;
-    node->is_exist = 0;
-    node->wcet = 0.0;
-    node->laxity = 0.0;
-    node->global_wcet = 0.0;
-    node->root = NULL;
-    node->child = NULL;
-    node->next = NULL;
-}
 
 int ros_rt_init(const char* node_name)
 {
-    node_t node;
-    node_init(&node);
-    node.node_name = node_name;
-    printf("This is %s\n", node.node_name);
-
+#if 0
+    /* Failed */
+    if ((__api_int(API_SET_NODE, node_index) == RES_FAULT) ? 0 : 1) {
+        return 0;
+    }
+    /* Success */
+    else {
+       return rt_init();
+    }
+#endif
     return rt_init();
 }
 int ros_rt_exit(void)
