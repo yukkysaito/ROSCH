@@ -1115,15 +1115,15 @@ node_t* search_node(node_t* node, int node_index)
       return node;
 
   if (node->child) {
-      node_t* return_node = search_node(node->child, node_index);
-      if (return_node != NULL)
-          return return_node;
+      node_t* result = search_node(node->child, node_index);
+      if (result != NULL)
+          return result;
   }
 
   if (node->next) {
-      node_t* return_node = search_node(node->next, node_index);
-      if (return_node != NULL)
-          return return_node;
+      node_t* result = search_node(node->next, node_index);
+      if (result != NULL)
+          return result;
   }
 
   return NULL;
@@ -1179,8 +1179,9 @@ int api_set_node(int rid, unsigned long node_index)
     printk(KERN_INFO
            "RESCH: get ROS node index:%d.\n", node_index);
 
-    switch (node_index){
+    switch (node_index) {
     case 0:
+    {
         root_node = make_node(0);
         node_t* node1 = make_node(1);
         node_t* node2 = make_node(2);
@@ -1192,18 +1193,22 @@ int api_set_node(int rid, unsigned long node_index)
                "Show tree.\n");
         show_tree_dfs(root_node);
         break;
+    }
     case 1:
     {
-        node_t* result_node = search_node(root_node, node_index);
-        if(result_node != NULL)
+        node_t* result = search_node(root_node, node_index);
+        if(result != NULL)
+            result->is_exist = 1;
             printk(KERN_INFO
-                   "node[index%d] is found.\n", result_node->node_index);
+                   "node[%d] is found.\n", result->node_index);
         else
             printk(KERN_INFO
                    "not found.\n");
         free_tree(root_node);
         break;
     }
+    default:
+            break;
     }
 
     return rid;
