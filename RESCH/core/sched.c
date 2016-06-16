@@ -25,6 +25,7 @@
 #include "bitops.h"
 #include "component.h"
 #include "reservation.h"
+#include "sched_ros.h"
 #include "sched.h"
 #include "test.h"
 
@@ -1045,150 +1046,27 @@ static void clear_dead_tasks(void)
 	}
 }
 
-
-/**
- * Var: ROS node tree.
- */
-typedef struct node {
-    char* node_name;
-    int node_index;
-    int pid;
-    int depth;
-    int is_exist;
-    float wcet;
-    float laxity;
-    float global_wcet;
-    struct node* parent;
-    struct node* child;
-    struct node* next;
-} node_t;
-node_t* root_node;
-
-void node_init(node_t* node)
-{
-    node->node_name = NULL;
-    node->node_index = -1;
-    node->pid = -1;
-    node->depth = 0;
-    node->is_exist = 0;
-    node->wcet = -1;
-    node->laxity = -1;
-    node->global_wcet = -1;
-    node->parent = NULL;
-    node->child = NULL;
-    node->next = NULL;
-}
-
-void insert_child_node(node_t* parent_node, node_t* child_node)
-{
-    if (parent_node == NULL || child_node == NULL)
-        return;
-    child_node->depth = parent_node->depth + 1;
-    if(parent_node->child == NULL) {
-        parent_node->child = child_node;
-    }
-    else {
-        node_t* next_child = parent_node->child;
-        while (next_child->next != NULL) {
-            next_child = next_child->next;
-        }
-        next_child->next = child_node;
-    }
-}
-
-node_t* make_node(int node_index)
-{
-    node_t *node = kmalloc(sizeof(node_t), GFP_KERNEL);
-    if (node != NULL) {
-        node_init(node);
-        node->node_index = node_index;
-        printk(KERN_INFO
-               "create:%d\n", node_index);
-    }
-    return node;
-}
-node_t* search_node(node_t* node, int node_index)
-{
-  if (node == NULL)
-      return NULL;
-  if(node->node_index == node_index)
-      return node;
-
-  if (node->child) {
-      node_t* result = search_node(node->child, node_index);
-      if (result != NULL)
-          return result;
-  }
-
-  if (node->next) {
-      node_t* result = search_node(node->next, node_index);
-      if (result != NULL)
-          return result;
-  }
-
-  return NULL;
-}
-void display(node_t* node)
-{
-    int i;
-    char buf[32];
-    for (i = 0; i < node->depth && i < 32; ++i) {
-        buf[i] = ' ';
-    }
-    buf[i] = '\0';
-
-    printk(KERN_INFO
-           "%sL %d\n", buf, node->node_index);
-}
-
-void show_tree_dfs(node_t* node)
-{
-  if (node == NULL)
-      return;
-  display(node);
-  if (node->child)
-      show_tree_dfs(node->child);
-  if (node->next)
-      show_tree_dfs(node->next);
-}
-
-void free_tree(node_t* node)
-{
-  if (node == NULL)
-      return;
-  if (node->child)
-      free_tree(node->child);
-  if (node->next)
-      free_tree(node->next);
-  display(node);
-  free_node(node);
-}
-
-int free_node(node_t* node)
-{
-    kfree(node);
-}
-
-
-
 /**
  * API: set a ROS node index to RESCH.
  */
+node_t* root_node;
 int api_set_node(int rid, unsigned long node_index)
 {
     printk(KERN_INFO
            "RESCH: get ROS node index:%d.\n", node_index);
 
     switch (node_index) {
-    case 0:
+    case 0: /* rosout */
     {
         root_node = make_node(0);
         node_t* node1 = make_node(1);
         node_t* node2 = make_node(2);
         node_t* node3 = make_node(3);
+        node_t* node4 = make_node(4);
         insert_child_node(root_node, node1);
         insert_child_node(node1, node2);
         insert_child_node(node2, node3);
+        insert_child_node(node2, node4);
         printk(KERN_INFO
                "Show tree.\n");
         show_tree_dfs(root_node);
@@ -1197,13 +1075,14 @@ int api_set_node(int rid, unsigned long node_index)
     case 1:
     {
         node_t* result = search_node(root_node, node_index);
-        if(result != NULL)
+        if(result != NULL) {
             result->is_exist = 1;
             printk(KERN_INFO
                    "node[%d] is found.\n", result->node_index);
-        else
+        } else {
             printk(KERN_INFO
                    "not found.\n");
+        }
         free_tree(root_node);
         break;
     }

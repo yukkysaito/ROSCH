@@ -1,6 +1,6 @@
 TARGET = resch
 OBJS_GPU = gpu.o gpu_init.o gpu_sched.o
-OBJS = main.o sched.o preempt_trace.o event.o reservation.o component.o test.o $(OBJS_GPU)
+OBJS = main.o sched.o sched_ros.o preempt_trace.o event.o reservation.o component.o test.o $(OBJS_GPU)
 INCDIR = ../include/
 
 # If KERNELRELEASE is define, we have been invoked from the
