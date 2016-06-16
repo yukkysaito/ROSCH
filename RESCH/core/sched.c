@@ -19,7 +19,6 @@
 #include <linux/kthread.h>
 #include <linux/list.h>
 #include <linux/module.h>
-#include <linux/slab.h>
 #include <resch-api.h>
 #include <resch-core.h>
 #include "bitops.h"
@@ -1078,7 +1077,7 @@ int api_set_node(int rid, unsigned long node_index)
         if(result != NULL) {
             result->is_exist = 1;
             printk(KERN_INFO
-                   "node[%d] is found.\n", result->node_index);
+                   "node[%d] is found.\n", result->index);
         } else {
             printk(KERN_INFO
                    "not found.\n");

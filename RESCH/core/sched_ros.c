@@ -4,8 +4,8 @@
 
 void node_init(node_t* node)
 {
-    node->node_name = NULL;
-    node->node_index = -1;
+    node->name = NULL;
+    node->index = -1;
     node->pid = -1;
     node->depth = 0;
     node->is_exist = 0;
@@ -39,7 +39,7 @@ node_t* make_node(int node_index)
     node_t *node = kmalloc(sizeof(node_t), GFP_KERNEL);
     if (node != NULL) {
         node_init(node);
-        node->node_index = node_index;
+        node->index = node_index;
         printk(KERN_INFO
                "create:%d\n", node_index);
     }
@@ -50,7 +50,7 @@ node_t* search_node(node_t* node, int node_index)
 {
   if (node == NULL)
       return NULL;
-  if(node->node_index == node_index)
+  if(node->index == node_index)
       return node;
 
   if (node->child) {
@@ -78,7 +78,7 @@ void display(node_t* node)
     buf[i] = '\0';
 
     printk(KERN_INFO
-           "%sL %d\n", buf, node->node_index);
+           "%sL %d\n", buf, node->index);
 }
 
 void show_tree_dfs(node_t* node)
