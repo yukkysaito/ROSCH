@@ -1057,15 +1057,29 @@ int api_set_node(int rid, unsigned long node_index)
     switch (node_index) {
     case 0: /* rosout */
     {
-        root_node = make_node(0);
-        node_t* node1 = make_node(1);
-        node_t* node2 = make_node(2);
-        node_t* node3 = make_node(3);
-        node_t* node4 = make_node(4);
-        insert_child_node(root_node, node1);
-        insert_child_node(node1, node2);
-        insert_child_node(node2, node3);
-        insert_child_node(node2, node4);
+        root_node = make_node(16);
+        node_t* node15 = make_node(15);
+        node_t* node14 = make_node(14);
+        node_t* node13 = make_node(13);
+        node_t* node12 = make_node(12);
+        node_t* node11 = make_node(11);
+        node_t* node21 = make_node(21);
+        node_t* node22 = make_node(22);
+        node_t* node23 = make_node(23);
+        node_t* node31 = make_node(31);
+        node_t* node41 = make_node(41);
+        insert_child_node(root_node, node15);
+        insert_child_node(root_node, node41);
+        insert_child_node(node15, node14);
+        insert_child_node(node15, node31);
+        insert_child_node(node14, node13);
+        insert_child_node(node13, node12);
+        insert_child_node(node13, node23);
+        insert_child_node(node12, node11);
+        insert_child_node(node23, node22);
+        insert_child_node(node22, node21);
+        insert_child_node(node31, node21);
+        insert_child_node(node41, node21);
         printk(KERN_INFO
                "Show tree.\n");
         show_tree_dfs(root_node);
@@ -1077,14 +1091,39 @@ int api_set_node(int rid, unsigned long node_index)
         if(result != NULL) {
             result->is_exist = 1;
             printk(KERN_INFO
+                   "node[%d] is found.\n", node_index);
+        } else {
+            printk(KERN_INFO
+                   "node[%d] not found.\n", node_index);
+        }
+        search_leaf_node(root_node);
+        free_tree(root_node);
+        break;
+    }
+    case 16:
+    case 15:
+    case 14:
+    case 13:
+    case 12:
+    case 11:
+    case 23:
+    case 22:
+    case 21:
+    case 31:
+    case 41:
+    {
+        node_t* result = search_node(root_node, node_index);
+        if(result != NULL) {
+            result->is_exist = 1;
+            printk(KERN_INFO
                    "node[%d] is found.\n", result->index);
         } else {
             printk(KERN_INFO
                    "not found.\n");
         }
-        free_tree(root_node);
         break;
     }
+
     default:
             break;
     }

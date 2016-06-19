@@ -2,3 +2,25 @@
   nodeindex: 0
 - nodename: talker
   nodeindex: 1
+- nodename: obj_fusion
+  nodeindex: 16
+- nodename: obj_reproj
+  nodeindex: 15
+- nodename: XXX_track
+  nodeindex: 14
+- nodename: range_fusion
+  nodeindex: 13
+- nodename: dpm_XXX
+  nodeindex: 12
+- nodename: camera_driver
+  nodeindex: 11
+- nodename: vscan2image
+  nodeindex: 23
+- nodename: points2vscan
+  nodeindex: 22
+- nodename: velodyne_driver
+  nodeindex: 21
+- nodename: ndt_matching
+  nodeindex: 31
+- nodename: euclidean_cluster
+  nodeindex: 41
