@@ -70,6 +70,14 @@ static ssize_t resch_write
         res = api_set_node(a.rid, a.arg.val);
         break;
 
+    case API_START_CALLBACK:
+        res = api_start_callback(a.rid, a.arg.val);
+        break;
+
+    case API_END_CALLBACK:
+        res = api_end_callback(a.rid, a.arg.val);
+        break;
+
 		/* PORT I: preemptive periodic real-time scheduling.*/
 	case API_INIT:
 		res = api_init();

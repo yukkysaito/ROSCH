@@ -14,9 +14,11 @@
  */
 /* ROS APIs for real-time scheduling. */
 #define API_ROS_OFFSET 0
-#define API_SET_NODE	API_ROS_OFFSET + 0
+#define API_SET_NODE	    API_ROS_OFFSET + 0
+#define API_START_CALLBACK	API_ROS_OFFSET + 1
+#define API_END_CALLBACK    API_ROS_OFFSET + 2
 
-#define API_PORT1_OFFSET	API_ROS_OFFSET + 1
+#define API_PORT1_OFFSET	API_ROS_OFFSET + 3
 /* PORT-I: preemptive periodic real-time scheduling. */
 #define API_INIT	 		API_PORT1_OFFSET + 0
 #define API_EXIT			API_PORT1_OFFSET + 1

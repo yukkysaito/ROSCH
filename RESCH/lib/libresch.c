@@ -190,6 +190,14 @@ int ros_rt_set_node(unsigned long node_index)
 {
     return (__api_int(API_SET_NODE, node_index) == RES_FAULT) ? 0 : 1;
 }
+int ros_rt_start_callback(unsigned long node_index)
+{
+    return (__api_int(API_START_CALLBACK, node_index) == RES_FAULT) ? 0 : 1;
+}
+int ros_rt_end_callback(unsigned long node_index)
+{
+    return (__api_int(API_END_CALLBACK, node_index) == RES_FAULT) ? 0 : 1;
+}
 
 /************************************************************
  * PORT-I APIs for preemptive periodic real-time scheduling.

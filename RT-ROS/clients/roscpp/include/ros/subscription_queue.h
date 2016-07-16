@@ -38,6 +38,9 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <deque>
 
+//ROSCH
+#include "ros_rosch/analyzer.hpp"
+
 namespace ros
 {
 
@@ -88,6 +91,8 @@ private:
   bool allow_concurrent_callbacks_;
 
   boost::recursive_mutex callback_mutex_;
+
+  rosch::Analyzer analyzer;
 };
 
 }

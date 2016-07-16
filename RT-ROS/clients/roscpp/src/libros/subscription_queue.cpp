@@ -29,6 +29,12 @@
 #include "ros/subscription_queue.h"
 #include "ros/message_deserializer.h"
 #include "ros/subscription_callback_helper.h"
+#define ROSCH
+#ifdef ROSCH
+#include <ctime>
+#include <sched.h>
+#include "ros_rosch/bridge.hpp"
+#endif
 
 namespace ros
 {
@@ -39,6 +45,7 @@ SubscriptionQueue::SubscriptionQueue(const std::string& topic, int32_t queue_siz
 , full_(false)
 , queue_size_(0)
 , allow_concurrent_callbacks_(allow_concurrent_callbacks)
+, analyzer(rosch::get_node_name(),topic)
 {}
 
 SubscriptionQueue::~SubscriptionQueue()
@@ -155,13 +162,34 @@ CallbackInterface::CallResult SubscriptionQueue::call()
     try
     {
       self = shared_from_this();
-    }
-    catch (boost::bad_weak_ptr&) // For the tests, where we don't create a shared_ptr
-    {}
+      }
+      catch (boost::bad_weak_ptr&) // For the tests, where we don't create a shared_ptr
+      {}
+  #ifdef ROSCH      
+      if (topic_ != "/clock") {
+//          if(analyzer.is_taget()) {
+//              analyzer.set_target();
+//          }
 
-    SubscriptionCallbackHelperCallParams params;
-    params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-    i.helper->call(params);
+          analyzer.start_time();
+      }
+  #endif
+        SubscriptionCallbackHelperCallParams params;
+        params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
+        i.helper->call(params);
+  #ifdef ROSCH
+        if (topic_ != "/clock") {
+            analyzer.end_time();
+            ROS_INFO("%s(%s)[%d] time:%f(min:%f  max:%f)\n",
+                     rosch::get_node_name(),
+                     topic_.c_str(),
+                     analyzer.get_counter(),
+                     analyzer.get_exec_time_ms(),
+                     analyzer.get_min_time_ms(),
+                     analyzer.get_max_time_ms()
+                     );
+        }
+#endif
   }
 
   return CallbackInterface::Success;

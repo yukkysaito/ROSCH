@@ -24,6 +24,8 @@ extern "C" {
  ************************************************************/
 int ros_rt_init(const char* node_name);
 int ros_rt_set_node(unsigned long node_index);
+int ros_rt_start_callback(unsigned long node_index);
+int ros_rt_end_callback(unsigned long node_index);
 int ros_rt_exit(void);
 int ros_rt_run(struct timespec);
 int ros_rt_wait_period(void);

@@ -1067,17 +1067,19 @@ int api_set_node(int rid, unsigned long node_index)
         node_t* node22 = make_node(22);
         node_t* node23 = make_node(23);
         node_t* node31 = make_node(31);
+        node_t* node32 = make_node(32);
         node_t* node41 = make_node(41);
         insert_child_node(root_node, node15);
         insert_child_node(root_node, node41);
         insert_child_node(node15, node14);
-        insert_child_node(node15, node31);
+        insert_child_node(node15, node32);
         insert_child_node(node14, node13);
         insert_child_node(node13, node12);
         insert_child_node(node13, node23);
         insert_child_node(node12, node11);
         insert_child_node(node23, node22);
         insert_child_node(node22, node21);
+        insert_child_node(node32, node31);
         insert_child_node(node31, node21);
         insert_child_node(node41, node21);
         printk(KERN_INFO
@@ -1110,13 +1112,19 @@ int api_set_node(int rid, unsigned long node_index)
     case 22:
     case 21:
     case 31:
+    {
+        break;
+    }
     case 41:
     {
+
         node_t* result = search_node(root_node, node_index);
         if(result != NULL) {
             result->is_exist = 1;
             printk(KERN_INFO
                    "node[%d] is found.\n", result->index);
+//            api_set_scheduler(rid, RESCH_SCHED_FP);
+//            api_set_priority(rid, 98);
         } else {
             printk(KERN_INFO
                    "not found.\n");
@@ -1127,6 +1135,28 @@ int api_set_node(int rid, unsigned long node_index)
     default:
             break;
     }
+
+    return rid;
+}
+
+/**
+ * API: start callback function on the ROS node.
+ */
+int api_start_callback(int rid, unsigned long node_index)
+{
+    printk(KERN_INFO
+           "RESCH: start callback (node index:%d).\n", node_index);
+
+    return rid;
+}
+
+/**
+ * API: end callback function on the ROS node.
+ */
+int api_end_callback(int rid, unsigned long node_index)
+{
+    printk(KERN_INFO
+           "RESCH: start callback (node index:%d).\n", node_index);
 
     return rid;
 }
@@ -1350,6 +1380,25 @@ int api_set_scheduler(int rid, unsigned long policy)
 
 	return RES_SUCCESS;
 }
+
+/**
+ * API: set affinity for the current task.
+ */
+//int api_set_affinity(int rid, size_t cpusetsize, const cpu_set_t *mask)
+//{
+//    resch_task_t *rt = resch_task_ptr(rid);
+
+//    /* dont allow to set the priority for the EDF and FAIR schedulers. */
+//    if (rt->policy == RESCH_SCHED_EDF || rt->policy == RESCH_SCHED_FAIR) {
+//        return RES_FAULT;
+//    }
+
+//    /* set only the priority by set_scheduler(). */
+//    if (!set_affinity(rt, cpusetsize, mask)) {
+//        return RES_FAULT;
+//    }
+//    return RES_SUCCESS;
+//}
 
 /**
  * API: schedule the current task in background.

@@ -64,6 +64,8 @@ extern struct local_object lo[NR_RT_CPUS + 1];
 /* APIs. */
 /* ROS APIs. */
 int api_set_node(int, unsigned long);
+int api_start_callback(int, unsigned long);
+int api_end_callback(int, unsigned long);
 /* General APIs. */
 int api_init(void);
 int api_exit(int);
