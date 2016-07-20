@@ -1057,6 +1057,7 @@ int api_set_node(int rid, unsigned long node_index)
     switch (node_index) {
     case 0: /* rosout */
     {
+        /*
         root_node = make_node(16);
         node_t* node15 = make_node(15);
         node_t* node14 = make_node(14);
@@ -1086,9 +1087,11 @@ int api_set_node(int rid, unsigned long node_index)
                "Show tree.\n");
         show_tree_dfs(root_node);
         break;
+        */
     }
     case 1:
     {
+        /*
         node_t* result = search_node(root_node, node_index);
         if(result != NULL) {
             result->is_exist = 1;
@@ -1101,6 +1104,7 @@ int api_set_node(int rid, unsigned long node_index)
         search_leaf_node(root_node);
         free_tree(root_node);
         break;
+        */
     }
     case 16:
     case 15:

@@ -7,14 +7,14 @@
 static int fair_set_scheduler(resch_task_t *rt, int prio)
 {
 	struct sched_param sp;
-	sp.sched_priority = prio;
-	if (sched_setscheduler(rt->task, SCHED_NORMAL, &sp) < 0) {
-		printk(KERN_WARNING "RESCH: fair_change_prio() failed.\n");
-		printk(KERN_WARNING "RESCH: task#%d (process#%d) priority=%d.\n",
-			   rt->rid, rt->task->pid, prio);
-		return false;
-	}
-	
+    sp.sched_priority = 0;
+    if (sched_setscheduler(rt->task, SCHED_NORMAL, &sp) < 0) {
+        printk(KERN_WARNING "RESCH: fair_change_prio() failed.\n");
+        printk(KERN_WARNING "RESCH: task#%d (process#%d) priority=%d.\n",
+               rt->rid, rt->task->pid, prio);
+        return false;
+    }
+
 	rt->prio = prio;
 	return true;
 }
