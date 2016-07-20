@@ -18,9 +18,11 @@
   nodeindex: 23
 - nodename: points2vscan
   nodeindex: 22
-- nodename: velodyne_driver
+- nodename: /velodyne_driver
   nodeindex: 21
-- nodename: ndt_matching
+- nodename: /ndt_matching
   nodeindex: 31
+- nodename: /voxel_grid_filter
+  nodeindex: 32
 - nodename: euclidean_cluster
   nodeindex: 41

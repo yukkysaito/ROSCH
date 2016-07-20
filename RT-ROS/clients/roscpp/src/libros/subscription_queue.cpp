@@ -34,6 +34,7 @@
 #include <ctime>
 #include <sched.h>
 #include "ros_rosch/bridge.hpp"
+#include "ros_rosch/node_graph.hpp"
 #endif
 
 namespace ros
@@ -165,13 +166,20 @@ CallbackInterface::CallResult SubscriptionQueue::call()
       }
       catch (boost::bad_weak_ptr&) // For the tests, where we don't create a shared_ptr
       {}
-  #ifdef ROSCH      
+  #ifdef ROSCH
+      rosch::SingletonNodeGraphAnalyzer& node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
       if (topic_ != "/clock") {
+          analyzer.update_graph();
+          if(analyzer.is_target()) {
+              if(analyzer.is_in_range()) {
+                  analyzer.start_time();
+              }
+          }
+
 //          if(analyzer.is_taget()) {
 //              analyzer.set_target();
 //          }
 
-          analyzer.start_time();
       }
   #endif
         SubscriptionCallbackHelperCallParams params;
@@ -179,15 +187,27 @@ CallbackInterface::CallResult SubscriptionQueue::call()
         i.helper->call(params);
   #ifdef ROSCH
         if (topic_ != "/clock") {
-            analyzer.end_time();
-            ROS_INFO("%s(%s)[%d] time:%f(min:%f  max:%f)\n",
-                     rosch::get_node_name(),
-                     topic_.c_str(),
+            if(analyzer.is_target()) {
+                if(analyzer.is_in_range()) {
+                    analyzer.end_time();
+                } else {
+                    analyzer.finish_myself();
+                }
+
+            }
+            ROS_INFO("target:%d, %s[%d](%s)[%d:%d:%d] time:%f(min:%f  max:%f)\n",
+                     analyzer.get_target_index(),
+                     analyzer.get_node_name().c_str(),
+                     node_graph_analyzer.get_node_index(analyzer.get_node_name()),
+                     analyzer.get_topic_name().c_str(),
                      analyzer.get_counter(),
+                     node_graph_analyzer.getIntTest(),
+                     node_graph_analyzer.get_target_node()->index,
                      analyzer.get_exec_time_ms(),
                      analyzer.get_min_time_ms(),
                      analyzer.get_max_time_ms()
                      );
+
         }
 #endif
   }

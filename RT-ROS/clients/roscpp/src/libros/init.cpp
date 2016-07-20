@@ -69,6 +69,7 @@
 #define __RESCH_DEBUG__
 /* Node graph */
 #include "ros_rosch/node_graph.hpp"
+#include "ros_rosch/bridge.hpp"
 
 namespace ros
 {
@@ -442,20 +443,7 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
     rosch::NodeGraph node_graph;
     ros_rt_init(name.c_str());
     // error -1:get_node_index()
-    ros_rt_set_node(node_graph.get_node_index(name));
-    if (node_graph.get_node_index(name) == 31) {
-        cpu_set_t mask;
-        CPU_ZERO(&mask);
-        CPU_SET(0, &mask);
-
-        if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
-            perror("Failed to set CPU affinity");
-            exit(-1);
-        }
-        int prio = 99;
-        ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
-        ros_rt_set_priority(prio);
-    }
+    ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
 
 #ifdef __RESCH_DEBUG__
   /*

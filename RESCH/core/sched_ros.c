@@ -46,7 +46,7 @@ void insert_child_node(node_t* parent_node, node_t* child_node)
 
 node_t* make_node(int node_index)
 {
-    node_t *node = kmalloc(sizeof(node_t), GFP_KERNEL);
+    node_t *node = (node_t*)kmalloc(sizeof(node_t), GFP_KERNEL);
     if (node != NULL) {
         node_init(node);
         node->index = node_index;
@@ -80,7 +80,7 @@ node_t* search_node(node_t* node, int node_index)
 
 
 
-node_t* _search_leaf_node(node_t* node, node_t** leaf_list, int* i)
+void _search_leaf_node(node_t* node, node_t** leaf_list, int* i)
 {
     /* if (node == NULL) */
     /*     return; */

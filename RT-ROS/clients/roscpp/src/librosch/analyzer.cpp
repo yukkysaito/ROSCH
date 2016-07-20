@@ -1,4 +1,5 @@
 #include "ros_rosch/analyzer.hpp"
+#include "ros_rosch/node_graph.hpp"
 #include <ctime>
 #include <float.h>
 #include <string>
@@ -6,6 +7,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <resch/api.h>
 
 using namespace rosch;
 
@@ -49,13 +51,17 @@ Analyzer::Analyzer(const std::string& node_name,
     , topic_(topic)
     , node_name_(node_name)
     , is_aleady_rt_(false)
+    , ifs_inform_("inform_rosch_.txt")
+    , ofs_inform_("inform_rosch_.txt")
 {
+    graph_analyzer_ = &SingletonNodeGraphAnalyzer::getInstance();
     if (topic_ != "/clock") {
+        // Create dir.
         std::string dir_name(node_name);
         dir_name = remove_begin_slash(dir_name, "/");
         dir_name = replace_all(dir_name, "/", "__" );
         mkdir(dir_name.c_str(), 0755);
-
+        // Create output file.
         std::string file_name(topic+".csv");
         file_name = remove_begin_slash(file_name, "/");
         file_name = replace_all(file_name, "/", "__" );
@@ -100,8 +106,33 @@ double Analyzer::get_exec_time_ms() {
     return ExecTime::get_exec_time_ms();
 }
 
+bool Analyzer::is_in_range() {
+    return counter_ < max_analyze_times_ ? true : false;
+}
+
+int Analyzer::get_target_index() {
+    return graph_analyzer_->get_target_node()->index;
+}
+
+void Analyzer::update_graph() {
+    std::string str;
+    while(getline(ifs_inform_, str)) {
+        graph_analyzer_->finish_node(std::atoi(str.c_str()));
+        std::cout << "finish node"<<str << std::endl;
+    }
+    ifs_inform_.clear();
+    ifs_inform_.seekg(0, std::ios_base::beg);
+}
+
 bool Analyzer::is_target() {
-    return counter_<max_analyze_times_ ? true : false;
+    return graph_analyzer_->get_target_node()->index
+            == graph_analyzer_->get_node_index(get_node_name())
+            ? true : false;
+}
+
+void Analyzer::finish_myself() {
+    ofs_inform_ << graph_analyzer_->get_node_index(get_node_name()) << std::endl;
+    graph_analyzer_->finish_node(graph_analyzer_->get_node_index(get_node_name()));
 }
 
 unsigned int Analyzer::get_counter() {
@@ -109,9 +140,11 @@ unsigned int Analyzer::get_counter() {
 }
 
 void Analyzer::set_target() {
+    // gurad
     if(is_aleady_rt_) {
         return;
     }
+    is_aleady_rt_ = true;
 
     cpu_set_t mask;
     CPU_ZERO(&mask);
@@ -119,9 +152,17 @@ void Analyzer::set_target() {
 
     if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
         perror("Failed to set CPU affinity");
-        exit(-1);
+        return;
     }
     int prio = 99;
     ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
     ros_rt_set_priority(prio);
+}
+
+std::string Analyzer::get_node_name() {
+    return node_name_;
+}
+
+std::string Analyzer::get_topic_name() {
+    return topic_;
 }
