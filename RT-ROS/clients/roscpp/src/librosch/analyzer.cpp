@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <resch/api.h>
 
+#define _GNU_SOURCE 1
+#define CORE 8
 using namespace rosch;
 
 std::string remove_begin_slash(std::string source,
@@ -16,10 +18,14 @@ std::string remove_begin_slash(std::string source,
 {
     std::string::size_type pos(source.find(replace_source));
     if(pos == 0) {
+#if 0
         std::cout << "pos:" << pos << std::endl;
+#endif
         source.erase(source.begin());
     }
+#if 0
     std::cout << "pos:" << pos << "source:" << source <<  std::endl;
+#endif
 
     return source;
 }
@@ -118,7 +124,7 @@ void Analyzer::update_graph() {
     std::string str;
     while(getline(ifs_inform_, str)) {
         graph_analyzer_->finish_node(std::atoi(str.c_str()));
-        std::cout << "finish node"<<str << std::endl;
+        std::cout << "finish node"<< str << std::endl;
     }
     ifs_inform_.clear();
     ifs_inform_.seekg(0, std::ios_base::beg);
@@ -126,20 +132,25 @@ void Analyzer::update_graph() {
 
 bool Analyzer::is_target() {
     return graph_analyzer_->get_target_node()->index
-            == graph_analyzer_->get_node_index(get_node_name())
+            == graph_analyzer_->get_node_index(node_name_)
             ? true : false;
 }
 
 void Analyzer::finish_myself() {
-    ofs_inform_ << graph_analyzer_->get_node_index(get_node_name()) << std::endl;
-    graph_analyzer_->finish_node(graph_analyzer_->get_node_index(get_node_name()));
+    int index = graph_analyzer_->get_node_index(node_name_);
+
+    graph_analyzer_->finish_topic(index, topic_);
+    if(graph_analyzer_->is_empty_topic_list(index)) {
+        graph_analyzer_->finish_node(index);
+        ofs_inform_ << index << std::endl;
+    }
 }
 
 unsigned int Analyzer::get_counter() {
     return counter_;
 }
 
-void Analyzer::set_target() {
+void Analyzer::set_rt() {
     // gurad
     if(is_aleady_rt_) {
         return;
@@ -149,7 +160,6 @@ void Analyzer::set_target() {
     cpu_set_t mask;
     CPU_ZERO(&mask);
     CPU_SET(0, &mask);
-
     if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
         perror("Failed to set CPU affinity");
         return;
@@ -157,6 +167,23 @@ void Analyzer::set_target() {
     int prio = 99;
     ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
     ros_rt_set_priority(prio);
+}
+
+void Analyzer::set_fair() {
+    // gurad
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    int i;
+    for(i = 0; i < CORE; ++i) {
+        CPU_SET(i, &mask);
+    }
+    if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
+        perror("Failed to set CPU affinity");
+        return;
+    }
+
+    ros_rt_set_scheduler(SCHED_FAIR); /* you can also set SCHED_EDF. */
+    is_aleady_rt_ = false;
 }
 
 std::string Analyzer::get_node_name() {

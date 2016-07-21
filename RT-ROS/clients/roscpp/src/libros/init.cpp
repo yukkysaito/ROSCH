@@ -66,7 +66,7 @@
 
 /* RESCH */
 #include <resch/api.h>
-#define __RESCH_DEBUG__
+//#define __RESCH_DEBUG__
 /* Node graph */
 #include "ros_rosch/node_graph.hpp"
 #include "ros_rosch/bridge.hpp"
@@ -437,27 +437,6 @@ end:
 
 void init(const M_string& remappings, const std::string& name, uint32_t options)
 {
-  /* RESCH
-   * set real-time scheduling
-   */
-    rosch::NodeGraph node_graph;
-    ros_rt_init(name.c_str());
-    // error -1:get_node_index()
-    ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
-
-#ifdef __RESCH_DEBUG__
-  /*
-   * remappings: mean remapping topics
-   * name: mean myself node name
-   * options: ?
-   */
-  M_string::const_iterator it = remappings.begin();
-  for (; it != remappings.end(); it++){
-      std::cout << "remmappings: " << it->first << ", " << it->second << std::endl;
-  }
-  std::cout << "name: " << name << std::endl;
-  std::cout << "options: " << options << std::endl;
-#endif /* RESCH DEBUG */
 
   if (!g_atexit_registered)
   {
@@ -486,7 +465,27 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
     this_node::init(name, remappings, options);
     file_log::init(remappings);
     param::init(remappings);
+    /* RESCH
+     * set real-time scheduling
+     */
+      rosch::NodeGraph node_graph;
+      ros_rt_init(name.c_str());
+      // error -1:get_node_index()
+      ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
 
+  #ifdef __RESCH_DEBUG__
+    /*
+     * remappings: mean remapping topics
+     * name: mean myself node name
+     * options: ?
+     */
+    M_string::const_iterator it = remappings.begin();
+    for (; it != remappings.end(); it++){
+        std::cout << "remmappings: " << it->first << ", " << it->second << std::endl;
+    }
+    std::cout << "name: " << name << std::endl;
+    std::cout << "options: " << options << std::endl;
+  #endif /* RESCH DEBUG */
     g_initialized = true;
   }
 }

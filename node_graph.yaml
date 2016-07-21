@@ -1,4 +1,4 @@
-- nodename: rosout
+- nodename: /rosout
   nodeindex: 0
 - nodename: talker
   nodeindex: 1
@@ -22,7 +22,11 @@
   nodeindex: 21
 - nodename: /ndt_matching
   nodeindex: 31
+  sub_topic:
+  - /filtered_points
 - nodename: /voxel_grid_filter
   nodeindex: 32
+  sub_topic:
+  - /points_raw
 - nodename: euclidean_cluster
   nodeindex: 41

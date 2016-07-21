@@ -171,15 +171,11 @@ CallbackInterface::CallResult SubscriptionQueue::call()
       if (topic_ != "/clock") {
           analyzer.update_graph();
           if(analyzer.is_target()) {
+              analyzer.set_rt();
               if(analyzer.is_in_range()) {
                   analyzer.start_time();
               }
           }
-
-//          if(analyzer.is_taget()) {
-//              analyzer.set_target();
-//          }
-
       }
   #endif
         SubscriptionCallbackHelperCallParams params;
@@ -192,6 +188,7 @@ CallbackInterface::CallResult SubscriptionQueue::call()
                     analyzer.end_time();
                 } else {
                     analyzer.finish_myself();
+                    analyzer.set_fair();
                 }
 
             }

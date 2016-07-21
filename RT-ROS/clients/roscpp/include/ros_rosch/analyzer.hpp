@@ -24,7 +24,8 @@ public:
     int get_target_index();
     bool is_in_range();
     bool is_target();
-    void set_target();
+    void set_rt();
+    void set_fair();
     std::string get_node_name();
     std::string get_topic_name();
     void update_graph();
