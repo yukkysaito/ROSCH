@@ -167,14 +167,14 @@ CallbackInterface::CallResult SubscriptionQueue::call()
       catch (boost::bad_weak_ptr&) // For the tests, where we don't create a shared_ptr
       {}
   #ifdef ROSCH
+      bool is_target(analyzer.is_target());
+      bool is_in_range(analyzer.is_in_range());
       rosch::SingletonNodeGraphAnalyzer& node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
-      if (topic_ != "/clock") {
-          analyzer.update_graph();
-          if(analyzer.is_target()) {
-              analyzer.set_rt();
-              if(analyzer.is_in_range()) {
-                  analyzer.start_time();
-              }
+      analyzer.update_graph();
+      if(is_target) {
+          analyzer.set_rt();
+          if(is_in_range) {
+              analyzer.start_time();
           }
       }
   #endif
@@ -182,29 +182,23 @@ CallbackInterface::CallResult SubscriptionQueue::call()
         params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
         i.helper->call(params);
   #ifdef ROSCH
-        if (topic_ != "/clock") {
-            if(analyzer.is_target()) {
-                if(analyzer.is_in_range()) {
-                    analyzer.end_time();
-                } else {
-                    analyzer.finish_myself();
-                    analyzer.set_fair();
-                }
-
+        if(is_target) {
+            if(is_in_range) {
+                analyzer.end_time();
+            } else {
+                analyzer.finish_myself();
+                analyzer.set_fair();
             }
-            ROS_INFO("target:%d, %s[%d](%s)[%d:%d:%d] time:%f(min:%f  max:%f)\n",
+            ROS_INFO("target:%d %d[name:%s][topic:%s][%d] time:%f(min:%f  max:%f)\n",
                      analyzer.get_target_index(),
                      analyzer.get_node_name().c_str(),
                      node_graph_analyzer.get_node_index(analyzer.get_node_name()),
                      analyzer.get_topic_name().c_str(),
                      analyzer.get_counter(),
-                     node_graph_analyzer.getIntTest(),
-                     node_graph_analyzer.get_target_node()->index,
                      analyzer.get_exec_time_ms(),
                      analyzer.get_min_time_ms(),
                      analyzer.get_max_time_ms()
                      );
-
         }
 #endif
   }

@@ -1,32 +1,32 @@
 - nodename: /rosout
   nodeindex: 0
-- nodename: talker
-  nodeindex: 1
-- nodename: obj_fusion
-  nodeindex: 16
-- nodename: obj_reproj
-  nodeindex: 15
-- nodename: XXX_track
-  nodeindex: 14
-- nodename: range_fusion
-  nodeindex: 13
-- nodename: dpm_XXX
-  nodeindex: 12
-- nodename: camera_driver
-  nodeindex: 11
-- nodename: vscan2image
-  nodeindex: 23
-- nodename: points2vscan
-  nodeindex: 22
-- nodename: /velodyne_driver
-  nodeindex: 21
+  core : 1
+  sub_topic:
+  pub_topic:
+- nodename: /vel_pose_mux
+  nodeindex: 33
+  core : 1
+  sub_topic:
+  - /ndt_pose
+  pub_topic:
+  - /current_pose
 - nodename: /ndt_matching
   nodeindex: 31
+  core : 4
   sub_topic:
   - /filtered_points
+  pub_topic:
+  - /ndt_pose
 - nodename: /voxel_grid_filter
   nodeindex: 32
+  core : 1
   sub_topic:
   - /points_raw
-- nodename: euclidean_cluster
+  pub_topic:
+  - /filtered_points
+- nodename: /euclidean_cluster
   nodeindex: 41
+  core : 1
+  sub_topic:
+  - /points_raw
+  pub_topic:

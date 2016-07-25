@@ -9,8 +9,9 @@
 #define MAX_LEAF_LIST 16
 
 typedef struct node {
-    char* name;
+    std::string name;
     int index;
+    int core;
     int pid;
     int depth;
     int is_exist;
@@ -18,7 +19,8 @@ typedef struct node {
     float wcet;
     float laxity;
     float global_wcet;
-    std::vector<std::string> v_topic;
+    std::vector<std::string> v_sub_topic;
+    std::vector<std::string> v_pub_topic;
     struct node* parent;
     struct node* child;
     struct node* next;
@@ -28,7 +30,9 @@ typedef struct node {
 typedef struct node_info {
     std::string name;
     int index;
+    int core;
     std::vector<std::string> v_subtopic;
+    std::vector<std::string> v_pubtopic;
 } node_info_t;
 
 namespace rosch {
@@ -38,7 +42,9 @@ public:
     ~NodeGraph();
     int get_node_index(const std::string);
     std::string get_node_name(const int node_index);
+    int get_node_core(const int node_index);
     std::vector<std::string> get_node_subtopic(const int node_index);
+    std::vector<std::string> get_node_pubtopic(const int node_index);
 private:
     std::vector<node_info_t> v_node_info_;
     YAML::Node node_list;
@@ -64,6 +70,7 @@ public:
     void finish_topic(int node_index, std::string topic);
     node_t* search_node(int node_index);
     bool is_empty_topic_list(int node_index);
+    bool is_in_node_graph(int node_index);
 };
 }
 

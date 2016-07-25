@@ -8,9 +8,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <resch/api.h>
+#include<sstream>
 
 #define _GNU_SOURCE 1
-#define CORE 8
+
 using namespace rosch;
 
 std::string remove_begin_slash(std::string source,
@@ -44,6 +45,19 @@ std::string replace_all(std::string source,
     return source;
 }
 
+template <typename T>
+std::string to_string(T value)
+{
+  //create an output string stream
+  std::ostringstream os ;
+
+  //throw the value into the string stream
+  os << value ;
+
+  //convert the string stream into a string and return
+  return os.str() ;
+}
+
 Analyzer::Analyzer(const std::string& node_name,
                    const std::string& topic,
                    const unsigned int& max_times,
@@ -60,15 +74,20 @@ Analyzer::Analyzer(const std::string& node_name,
     , ifs_inform_("inform_rosch_.txt")
     , ofs_inform_("inform_rosch_.txt")
 {
-    graph_analyzer_ = &SingletonNodeGraphAnalyzer::getInstance();
-    if (topic_ != "/clock") {
+    graph_analyzer_= &SingletonNodeGraphAnalyzer::getInstance();
+    if (is_in_node_graph() && is_target_topic()) {
         // Create dir.
+        std::string rosch_dir_name("rosch/");
+        mkdir(rosch_dir_name.c_str(), 0755);
         std::string dir_name(node_name);
         dir_name = remove_begin_slash(dir_name, "/");
         dir_name = replace_all(dir_name, "/", "__" );
+        dir_name = rosch_dir_name + dir_name;
         mkdir(dir_name.c_str(), 0755);
         // Create output file.
-        std::string file_name(topic+".csv");
+        int index = graph_analyzer_->get_node_index(node_name_);
+        int core = graph_analyzer_->get_node_core(index);
+        std::string file_name(topic+"__"+to_string(core)+".csv");
         file_name = remove_begin_slash(file_name, "/");
         file_name = replace_all(file_name, "/", "__" );
         file_name = dir_name+"/"+file_name;
@@ -78,7 +97,7 @@ Analyzer::Analyzer(const std::string& node_name,
 
 Analyzer::~Analyzer()
 {
-    if (topic_ != "/clock") {
+    if (is_in_node_graph() && is_target_topic()) {
         ofs_.close();
     }
 }
@@ -97,7 +116,8 @@ void Analyzer::end_time() {
             min_ms_ = get_exec_time_ms();
         ofs_ << get_exec_time_ms() << std::endl;
     }
-    ++counter_;
+    if (is_in_range())
+        ++counter_;
 }
 
 double Analyzer::get_max_time_ms() {
@@ -124,16 +144,36 @@ void Analyzer::update_graph() {
     std::string str;
     while(getline(ifs_inform_, str)) {
         graph_analyzer_->finish_node(std::atoi(str.c_str()));
-        std::cout << "finish node"<< str << std::endl;
+//        std::cout << "finish node"<< str << std::endl;
     }
     ifs_inform_.clear();
     ifs_inform_.seekg(0, std::ios_base::beg);
 }
 
-bool Analyzer::is_target() {
-    return graph_analyzer_->get_target_node()->index
-            == graph_analyzer_->get_node_index(node_name_)
+bool Analyzer::is_in_node_graph() {
+    int index = graph_analyzer_->get_node_index(node_name_);
+    return graph_analyzer_->is_in_node_graph(index);
+}
+
+bool Analyzer::is_target_node() {
+    return get_target_index() == graph_analyzer_->get_node_index(node_name_)
             ? true : false;
+}
+
+bool Analyzer::is_target_topic() {
+    int index = graph_analyzer_->get_node_index(node_name_);
+    std::vector<std::string> sub_topic(graph_analyzer_->get_node_subtopic(index));
+    for (int i = 0; i < sub_topic.size(); ++i) {
+        if (sub_topic.at(i) == topic_)
+            return true;
+    }
+    return false;
+}
+
+bool Analyzer::is_target() {
+    if (is_target_node() && is_target_topic())
+        return true;
+    return false;
 }
 
 void Analyzer::finish_myself() {
@@ -159,7 +199,11 @@ void Analyzer::set_rt() {
 
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    CPU_SET(0, &mask);
+    int index = graph_analyzer_->get_node_index(node_name_);
+    int core = graph_analyzer_->get_node_core(index);
+    for (int i = 0; i < core; ++i) {
+        CPU_SET(i, &mask);
+    }
     if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
         perror("Failed to set CPU affinity");
         return;
@@ -173,8 +217,9 @@ void Analyzer::set_fair() {
     // gurad
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    int i;
-    for(i = 0; i < CORE; ++i) {
+    int core_max = sysconf(_SC_NPROCESSORS_CONF);
+
+    for(int i = 0; i < core_max; ++i) {
         CPU_SET(i, &mask);
     }
     if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {

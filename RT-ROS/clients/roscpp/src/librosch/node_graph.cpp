@@ -6,23 +6,29 @@
 
 using namespace rosch;
 
-NodeGraph::NodeGraph(const std::string& filename){
+NodeGraph::NodeGraph(const std::string& filename)
+    :v_node_info_(0)
+{
     try{
         node_list = YAML::LoadFile(filename);
         for (unsigned int i(0); i < node_list.size(); i++) {
             const YAML::Node subnode_name = node_list[i]["nodename"];
             const YAML::Node subnode_index = node_list[i]["nodeindex"];
+            const YAML::Node subnode_core = node_list[i]["core"];
             const YAML::Node subnode_subtopic = node_list[i]["sub_topic"];
+            const YAML::Node subnode_pubtopic = node_list[i]["pub_topic"];
 
-            // std::cout << subnode_name.as<std::string>() << ":" << subnode_index.as<int>() << std::endl;
             node_info_t node_info;
             node_info.name = subnode_name.as<std::string>();
-//            std::cout << "name:" << subnode_name.as<std::string>() << std::endl;
             node_info.index = subnode_index.as<int>();
-//            std::cout << "index:" << subnode_index.as<int>() << std::endl;
+            node_info.core = subnode_core.as<int>();
+            node_info.v_subtopic.resize(0);
             for (int i = 0; i < subnode_subtopic.size(); ++i) {
                 node_info.v_subtopic.push_back(subnode_subtopic[i].as<std::string>());
-//                std::cout << "sub topic["<< i << "]:" << subnode_subtopic[i].as<std::string>() << std::endl;
+            }
+            node_info.v_pubtopic.resize(0);
+            for (int i = 0; i < subnode_pubtopic.size(); ++i) {
+                node_info.v_pubtopic.push_back(subnode_pubtopic[i].as<std::string>());
             }
             v_node_info_.push_back(node_info);
         }
@@ -37,7 +43,7 @@ NodeGraph::~NodeGraph()
 }
 
 int NodeGraph::get_node_index(const std::string node_name) {
-    for (int i = 0; v_node_info_.size(); ++i) {
+    for (int i = 0; i < v_node_info_.size(); ++i) {
         if (v_node_info_.at(i).name == node_name)
             return v_node_info_.at(i).index;
     }
@@ -45,17 +51,35 @@ int NodeGraph::get_node_index(const std::string node_name) {
 }
 
 std::string NodeGraph::get_node_name(const int node_index) {
-    for (int i = 0; v_node_info_.size(); ++i) {
+    for (int i = 0; i < v_node_info_.size(); ++i) {
         if (v_node_info_.at(i).index == node_index)
             return v_node_info_.at(i).name;
     }
     return "";
 }
 
+int NodeGraph::get_node_core(const int node_index) {
+    for (int i = 0; i < v_node_info_.size(); ++i) {
+        if (v_node_info_.at(i).index == node_index)
+            return v_node_info_.at(i).core;
+    }
+    return 1;
+}
+
 std::vector<std::string> NodeGraph::get_node_subtopic(const int node_index) {
-    for (int i = 0; v_node_info_.size(); ++i) {
+    for (int i = 0; i < v_node_info_.size(); ++i) {
         if (v_node_info_.at(i).index == node_index) {
             return v_node_info_.at(i).v_subtopic;
+        }
+    }
+    std::vector<std::string> v(0);
+    return v;
+}
+
+std::vector<std::string> NodeGraph::get_node_pubtopic(const int node_index) {
+    for (int i = 0; i < v_node_info_.size(); ++i) {
+        if (v_node_info_.at(i).index == node_index) {
+            return v_node_info_.at(i).v_pubtopic;
         }
     }
     std::vector<std::string> v(0);
@@ -66,7 +90,9 @@ void node_init(node_t* node);
 void insert_child_node(node_t* parent_node, node_t* child_node);
 node_t* make_node(const std::string name,
                   const int node_index,
-                  const std::vector<std::string> v_subtopic);
+                  const int core,
+                  const std::vector<std::string> v_subtopic,
+                  const std::vector<std::string> v_pubtopic);
 node_t* _search_node(node_t* node, int node_index);
 node_t** search_leaf_node(node_t* node);
 void show_tree_dfs(node_t* node);
@@ -86,7 +112,10 @@ SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer()
     :test(0)
 {
     int index = 16;
-    root_node = make_node(get_node_name(index),index, get_node_subtopic(index));
+    root_node = make_node(get_node_name(index), index,
+                          get_node_core(index),
+                          get_node_subtopic(index),
+                          get_node_pubtopic(index));
 //    node_t* node15 = make_node(15);
 //    node_t* node14 = make_node(14);
 //    node_t* node13 = make_node(13);
@@ -96,9 +125,20 @@ SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer()
 //    node_t* node22 = make_node(22);
 //    node_t* node23 = make_node(23);
     index = 31;
-    node_t* node31 = make_node(get_node_name(index),index, get_node_subtopic(index));
+    node_t* node31 = make_node(get_node_name(index), index,
+                               get_node_core(index),
+                               get_node_subtopic(index),
+                               get_node_pubtopic(index));
     index = 32;
-    node_t* node32 = make_node(get_node_name(index),index, get_node_subtopic(index));
+    node_t* node32 = make_node(get_node_name(index),index,
+                               get_node_core(index),
+                               get_node_subtopic(index),
+                               get_node_pubtopic(index));
+    index = 33;
+    node_t* node33 = make_node(get_node_name(index), index,
+                               get_node_core(index),
+                               get_node_subtopic(index),
+                               get_node_pubtopic(index));
     //    node_t* node41 = make_node(41);
 //    insert_child_node(root_node, node15);
 //    insert_child_node(root_node, node41);
@@ -115,6 +155,7 @@ SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer()
 //    insert_child_node(node41, node21);
     insert_child_node(root_node, node31);
     insert_child_node(node31, node32);
+    insert_child_node(node32, node33);
     show_tree_dfs(root_node);
 }
 
@@ -153,7 +194,17 @@ void SingletonNodeGraphAnalyzer::finish_node(int node_index) {
 }
 
 bool SingletonNodeGraphAnalyzer::is_empty_topic_list(int node_index) {
-    return search_node(node_index)->v_topic.empty();
+    node_t* searched = search_node(node_index);
+    if(searched == NULL)
+        return false;
+    else
+        return searched->v_sub_topic.empty();
+}
+bool SingletonNodeGraphAnalyzer::is_in_node_graph(int node_index) {
+    node_t* searched = search_node(node_index);
+    if(searched == NULL)
+        return false;
+    return true;
 }
 
 SingletonNodeGraphAnalyzer& SingletonNodeGraphAnalyzer::getInstance() {
@@ -162,10 +213,10 @@ SingletonNodeGraphAnalyzer& SingletonNodeGraphAnalyzer::getInstance() {
 }
 
 void SingletonNodeGraphAnalyzer::finish_topic(int node_index, std::string topic) {
-    std::vector<std::string>::iterator itr = search_node(node_index)->v_topic.begin();
-    while(itr != search_node(node_index)->v_topic.end()) {
+    std::vector<std::string>::iterator itr = search_node(node_index)->v_sub_topic.begin();
+    while(itr != search_node(node_index)->v_sub_topic.end()) {
         if(*itr == topic) {
-            itr = search_node(node_index)->v_topic.erase(itr);
+            itr = search_node(node_index)->v_sub_topic.erase(itr);
         } else {
             itr++;
         }
@@ -178,7 +229,6 @@ void SingletonNodeGraphAnalyzer::finish_topic(int node_index, std::string topic)
 */
 void node_init(node_t* node)
 {
-    node->name = NULL;
     node->index = -1;
     node->pid = -1;
     node->depth = 0;
@@ -220,21 +270,25 @@ void insert_child_node(node_t* parent_node, node_t* child_node)
  */
 node_t* make_node(const std::string name,
                   const int node_index,
-                  const std::vector<std::string> v_subtopic)
+                  const int core,
+                  const std::vector<std::string> v_subtopic,
+                  const std::vector<std::string> v_pubtopic)
 {
-    node_t *node = (node_t *)malloc(sizeof(node_t));
+    node_t* node = new node_t;
     if (node != NULL) {
         node_init(node);
-//        node->name = name;
+        node->name = name;
         node->index = node_index;
-        node->v_topic.resize(10);
-        if (0 < v_subtopic.size()) {
-            std::cout << "size:" << v_subtopic.size() << std::endl;
-//            node->v_topic.resize(v_subtopic.size());
-//            std::copy(v_subtopic.begin(),
-//                      v_subtopic.end(),
-//                      node->v_topic.begin());
-        }
+        node->core = core;
+        node->v_sub_topic.resize(v_subtopic.size());
+        std::copy(v_subtopic.begin(),
+                  v_subtopic.end(),
+                  node->v_sub_topic.begin());
+        node->v_pub_topic.resize(v_pubtopic.size());
+        std::copy(v_pubtopic.begin(),
+                  v_pubtopic.end(),
+                  node->v_pub_topic.begin());
+
         std::cout << "create:" << node_index << std::endl;
     }
     return node;
@@ -411,7 +465,7 @@ int free_node(node_t* root_node, node_t* node)
 {
     if(is_leaf_node(root_node, node)) {
         remove_node(root_node, node);
-        free(node);
+        delete node;
     }
 }
 
