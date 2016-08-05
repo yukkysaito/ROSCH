@@ -19,3 +19,8 @@ GPATH
 *.ko
 *.cmd
 .tmp_versions
+ROSCH.config
+ROSCH.creator
+ROSCH.creator.user
+ROSCH.files
+ROSCH.includes
