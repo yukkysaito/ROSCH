@@ -11,8 +11,8 @@ class Analyzer : ExecTime {
 public:
     explicit Analyzer(const std::string& node_name,
                       const std::string& topic,
-                      const unsigned int& max_times=100,
-                      const unsigned int& ignore_times=20);
+                      const unsigned int& max_times=300,
+                      const unsigned int& ignore_times=50);
     ~Analyzer();
     void start_time(); //
     void end_time(); //
@@ -34,6 +34,8 @@ public:
     void update_graph();
 private:
     SingletonNodeGraphAnalyzer* graph_analyzer_;
+    void open_output_file(bool init);
+    bool set_affinity(int core);
     unsigned int max_analyze_times_;
     unsigned int ignore_times_;
     unsigned int counter_;
@@ -44,8 +46,7 @@ private:
     std::string topic_;
     bool is_aleady_rt_;
     std::ofstream ofs_;
-    std::ofstream ofs_inform_;
-    std::ifstream ifs_inform_;
+    int core_;
 };
 }
 

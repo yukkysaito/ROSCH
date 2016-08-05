@@ -39,7 +39,10 @@
 #include <deque>
 
 //ROSCH
+#define ROSCH_H
+#ifdef ROSCH_H
 #include "ros_rosch/analyzer.hpp"
+#endif
 
 namespace ros
 {
@@ -92,7 +95,9 @@ private:
 
   boost::recursive_mutex callback_mutex_;
 
+#ifdef ROSCH_H
   rosch::Analyzer analyzer;
+#endif
 };
 
 }

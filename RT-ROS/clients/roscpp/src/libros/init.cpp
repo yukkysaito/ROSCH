@@ -468,10 +468,10 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
     /* RESCH
      * set real-time scheduling
      */
-      rosch::NodeGraph node_graph;
+//      rosch::NodeGraph node_graph;
       ros_rt_init(name.c_str());
       // error -1:get_node_index()
-      ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
+//      ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
 
   #ifdef __RESCH_DEBUG__
     /*

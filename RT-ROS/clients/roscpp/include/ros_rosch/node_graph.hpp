@@ -43,8 +43,11 @@ public:
     int get_node_index(const std::string);
     std::string get_node_name(const int node_index);
     int get_node_core(const int node_index);
+    int get_node_core(const std::string node_name);
+
     std::vector<std::string> get_node_subtopic(const int node_index);
     std::vector<std::string> get_node_pubtopic(const int node_index);
+    size_t get_node_list_size();
 private:
     std::vector<node_info_t> v_node_info_;
     YAML::Node node_list;
@@ -58,8 +61,9 @@ private:
     ~SingletonNodeGraphAnalyzer();
     void free_graph_node_();
     int test;
-
+    std::vector<std::string> v_removed_sub_topic_;
 public:
+    std::vector<node_t *> v_node_;
     node_t* root_node;
     static SingletonNodeGraphAnalyzer& getInstance();
     int getIntTest();
@@ -71,6 +75,7 @@ public:
     node_t* search_node(int node_index);
     bool is_empty_topic_list(int node_index);
     bool is_in_node_graph(int node_index);
+    void refresh_topic_list(int node_index);
 };
 }
 

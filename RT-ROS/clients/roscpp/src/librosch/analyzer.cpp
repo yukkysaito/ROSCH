@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <resch/api.h>
-#include<sstream>
+#include <sstream>
 
 #define _GNU_SOURCE 1
 
@@ -71,12 +71,13 @@ Analyzer::Analyzer(const std::string& node_name,
     , topic_(topic)
     , node_name_(node_name)
     , is_aleady_rt_(false)
-    , ifs_inform_("inform_rosch_.txt")
-    , ofs_inform_("inform_rosch_.txt")
 {
     graph_analyzer_= &SingletonNodeGraphAnalyzer::getInstance();
     if (is_in_node_graph() && is_target_topic()) {
+        int index = graph_analyzer_->get_node_index(node_name_);
+        core_ = graph_analyzer_->get_node_core(index);
         // Create dir.
+
         std::string rosch_dir_name("rosch/");
         mkdir(rosch_dir_name.c_str(), 0755);
         std::string dir_name(node_name);
@@ -85,13 +86,7 @@ Analyzer::Analyzer(const std::string& node_name,
         dir_name = rosch_dir_name + dir_name;
         mkdir(dir_name.c_str(), 0755);
         // Create output file.
-        int index = graph_analyzer_->get_node_index(node_name_);
-        int core = graph_analyzer_->get_node_core(index);
-        std::string file_name(topic+"__"+to_string(core)+".csv");
-        file_name = remove_begin_slash(file_name, "/");
-        file_name = replace_all(file_name, "/", "__" );
-        file_name = dir_name+"/"+file_name;
-        ofs_.open(file_name.c_str());
+        open_output_file(true);
     }
 }
 
@@ -114,6 +109,7 @@ void Analyzer::end_time() {
             max_ms_ = get_exec_time_ms();
         if (get_exec_time_ms() < min_ms_)
             min_ms_ = get_exec_time_ms();
+        int core = graph_analyzer_->get_node_core(node_name_);
         ofs_ << get_exec_time_ms() << std::endl;
     }
     if (is_in_range())
@@ -142,9 +138,10 @@ int Analyzer::get_target_index() {
 
 void Analyzer::update_graph() {
     std::string str;
+    std::ifstream ifs_inform_("inform_rosch_.txt");
     while(getline(ifs_inform_, str)) {
         graph_analyzer_->finish_node(std::atoi(str.c_str()));
-//        std::cout << "finish node"<< str << std::endl;
+        std::cout << "finish node"<< str << std::endl;
     }
     ifs_inform_.clear();
     ifs_inform_.seekg(0, std::ios_base::beg);
@@ -181,9 +178,51 @@ void Analyzer::finish_myself() {
 
     graph_analyzer_->finish_topic(index, topic_);
     if(graph_analyzer_->is_empty_topic_list(index)) {
-        graph_analyzer_->finish_node(index);
-        ofs_inform_ << index << std::endl;
+        std::cout << "finish[core:" << core_ << "]:" << index << std::endl;
+        core_ += -1;
+        if(core_ == 0) { // analyzed in all cores
+            graph_analyzer_->finish_node(index);
+            std::ofstream ofs_inform_;
+            ofs_inform_.open("inform_rosch_.txt", std::ios::app);
+            ofs_inform_ << index << std::endl;
+            ofs_inform_.close();
+        } else { // analyze next cores
+            set_affinity(core_);
+            graph_analyzer_->refresh_topic_list(index);
+            counter_ = 0;
+            open_output_file(false);
+        }
     }
+}
+
+void Analyzer::open_output_file(bool init) {
+    if (!init) {
+        ofs_.close();
+    }
+    std::string rosch_dir_name("rosch/");
+    std::string dir_name(node_name_);
+    dir_name = remove_begin_slash(dir_name, "/");
+    dir_name = replace_all(dir_name, "/", "__" );
+    dir_name = rosch_dir_name + dir_name;
+    // Create output file.
+    std::string file_name(topic_+"__"+to_string(core_)+".csv");
+    file_name = remove_begin_slash(file_name, "/");
+    file_name = replace_all(file_name, "/", "__" );
+    file_name = dir_name+"/"+file_name;
+    ofs_.open(file_name.c_str());
+}
+
+bool Analyzer::set_affinity(int core){
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    for (int i = 0; i < core; ++i) {
+        CPU_SET(i, &mask);
+    }
+    if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
+        perror("Failed to set CPU affinity");
+        return -1;
+    }
+    return 1;
 }
 
 unsigned int Analyzer::get_counter() {
@@ -200,14 +239,7 @@ void Analyzer::set_rt() {
     cpu_set_t mask;
     CPU_ZERO(&mask);
     int index = graph_analyzer_->get_node_index(node_name_);
-    int core = graph_analyzer_->get_node_core(index);
-    for (int i = 0; i < core; ++i) {
-        CPU_SET(i, &mask);
-    }
-    if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
-        perror("Failed to set CPU affinity");
-        return;
-    }
+    set_affinity(core_);
     int prio = 99;
     ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
     ros_rt_set_priority(prio);
@@ -219,13 +251,7 @@ void Analyzer::set_fair() {
     CPU_ZERO(&mask);
     int core_max = sysconf(_SC_NPROCESSORS_CONF);
 
-    for(int i = 0; i < core_max; ++i) {
-        CPU_SET(i, &mask);
-    }
-    if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
-        perror("Failed to set CPU affinity");
-        return;
-    }
+    set_affinity(core_max);
 
     ros_rt_set_scheduler(SCHED_FAIR); /* you can also set SCHED_EDF. */
     is_aleady_rt_ = false;

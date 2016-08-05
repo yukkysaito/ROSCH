@@ -46,7 +46,9 @@ SubscriptionQueue::SubscriptionQueue(const std::string& topic, int32_t queue_siz
 , full_(false)
 , queue_size_(0)
 , allow_concurrent_callbacks_(allow_concurrent_callbacks)
+#ifdef ROSCH
 , analyzer(rosch::get_node_name(),topic)
+#endif
 {}
 
 SubscriptionQueue::~SubscriptionQueue()
@@ -170,6 +172,7 @@ CallbackInterface::CallResult SubscriptionQueue::call()
       bool is_target(analyzer.is_target());
       bool is_in_range(analyzer.is_in_range());
       rosch::SingletonNodeGraphAnalyzer& node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
+      if(topic_ != "/clock") {
       analyzer.update_graph();
       if(is_target) {
           analyzer.set_rt();
@@ -177,13 +180,15 @@ CallbackInterface::CallResult SubscriptionQueue::call()
               analyzer.start_time();
           }
       }
+      }
   #endif
-        SubscriptionCallbackHelperCallParams params;
-        params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-        i.helper->call(params);
+      SubscriptionCallbackHelperCallParams params;
+      params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
+      i.helper->call(params);
   #ifdef ROSCH
-        if(is_target) {
-            if(is_in_range) {
+      if(topic_ != "/clock") {
+          if(is_target) {
+              if(is_in_range) {
                 analyzer.end_time();
             } else {
                 analyzer.finish_myself();
@@ -191,14 +196,16 @@ CallbackInterface::CallResult SubscriptionQueue::call()
             }
             ROS_INFO("target:%d %d[name:%s][topic:%s][%d] time:%f(min:%f  max:%f)\n",
                      analyzer.get_target_index(),
-                     analyzer.get_node_name().c_str(),
                      node_graph_analyzer.get_node_index(analyzer.get_node_name()),
+                     analyzer.get_node_name().c_str(),
                      analyzer.get_topic_name().c_str(),
                      analyzer.get_counter(),
                      analyzer.get_exec_time_ms(),
                      analyzer.get_min_time_ms(),
                      analyzer.get_max_time_ms()
                      );
+
+        }
         }
 #endif
   }
