@@ -3,3 +3,7 @@
 SchedAnalyzer::SchedAnalyzer()
 {
 }
+
+SchedAnalyzer::~SchedAnalyzer()
+{
+}
