@@ -4,15 +4,34 @@
 #include <string>
 #include <vector>
 
-struct node_t {
-    std::string name;
-    int index;
-    int core;
-    std::vector<std::string> v_sub_topic;
-    std::vector<std::string> v_pub_topic;
-    struct node_t* parent;
-    struct node_t* child;
-    struct node_t* next;
-};
+static const int PARENT_MAX = 6;
+typedef struct node_t {
+  std::string name;
+  int index;
+  int depth;
+  int core;
+#if 1 // C++
+  std::vector<std::string> v_sub_topic;
+  std::vector<std::string> v_pub_topic;
+#else // Native C
+#endif
+#ifdef SCHED_ANALYZER
+  int run_time;
+  int inv_laxity;
+#endif
+  node_t *parent[PARENT_MAX];
+  node_t *child;
+  node_t *next;
+} node_t;
 
+typedef struct node_info_t {
+  std::string name;
+  int index;
+  int core;
+#ifdef SCHED_ANALYZER
+  int run_time;
+#endif
+  std::vector<std::string> v_subtopic;
+  std::vector<std::string> v_pubtopic;
+} node_info_t;
 #endif // NODE_H

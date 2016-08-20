@@ -19,6 +19,7 @@ GPATH
 *.ko
 *.cmd
 .tmp_versions
+/.vscode/
 ROSCH.config
 ROSCH.creator
 ROSCH.creator.user

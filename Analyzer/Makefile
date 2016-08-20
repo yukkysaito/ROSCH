@@ -1,7 +1,7 @@
 COMPILER  = g++
-CFLAGS    = -g -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers
+CFLAGS    = -g -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DSCHED_ANALYZER
 ifeq "$(shell getconf LONG_BIT)" "64"
-  LDFLAGS =
+  LDFLAGS = -lyaml-cpp
 else
   LDFLAGS =
 endif
@@ -29,7 +29,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 all: clean $(TARGET)
 
-run: all
+run: 
 	$(TARGET)
 
 clean:
