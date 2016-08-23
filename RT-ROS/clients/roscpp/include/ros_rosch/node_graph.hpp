@@ -38,7 +38,7 @@ namespace rosch {
 class NodeGraph {
 public:
   NodeGraph();
-  NodeGraph(const std::string &filename = "/tmp/node_graph.yaml");
+  NodeGraph(const std::string &filename);
   ~NodeGraph();
   int get_node_index(const std::string);
   std::string get_node_name(const int node_index);
@@ -58,6 +58,7 @@ private:
 class SingletonNodeGraphAnalyzer : public NodeGraph {
 private:
   SingletonNodeGraphAnalyzer();
+  SingletonNodeGraphAnalyzer(const std::string &filename);
   SingletonNodeGraphAnalyzer(const SingletonNodeGraphAnalyzer &);
   SingletonNodeGraphAnalyzer &operator=(const SingletonNodeGraphAnalyzer &);
   ~SingletonNodeGraphAnalyzer();

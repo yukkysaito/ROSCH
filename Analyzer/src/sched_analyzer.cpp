@@ -167,6 +167,11 @@ int SchedAnalyzer::show_sched_cpu_tasks() {
   return 0;
 }
 
+int SchedAnalyzer::get_cpu_taskset(std::vector<V_sched_node>& v_sched_cpu_task) {
+  v_sched_cpu_task = v_sched_cpu_task_;
+  return 0;
+}
+
 int SchedAnalyzer::get_min_start_time(int index, int &min_start_time) {
   std::vector<node_t> v_child;
   min_start_time = 0;
@@ -369,3 +374,11 @@ int SchedAnalyzer::set_sched_vacancy_node(
 
 spec_t SchedAnalyzer::get_spec() { return spec_; }
 int SchedAnalyzer::get_spec_core() { return spec_.core; }
+int SchedAnalyzer::get_makespan() { return makespan_; }
+int SchedAnalyzer::get_node_list_size() {
+  return node_graph_analyzer_.get_node_list_size();
+}
+int SchedAnalyzer::get_node_name(int index, std::string &node_name) {
+  node_name = node_graph_analyzer_.get_node_name(index);
+  return 0;
+}

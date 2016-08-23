@@ -16,6 +16,8 @@ struct sched_node_t {
   int end_time;
 };
 
+typedef std::vector<sched_node_t> V_sched_node;
+
 class SchedAnalyzer {
 public:
   SchedAnalyzer();
@@ -26,8 +28,9 @@ public:
   int get_spec_core();
   int show_sched_cpu_tasks();
   spec_t get_spec();
-
-  typedef std::vector<sched_node_t> V_sched_node;
+  int get_cpu_taskset(std::vector<V_sched_node>& v_sched_cpu_task);
+  int get_node_list_size();
+  int get_node_name(int index, std::string &node_name);
 
 private:
   typedef struct sort_esc_time_t {

@@ -1,7 +1,7 @@
 COMPILER  = g++
-CFLAGS    = -g -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DSCHED_ANALYZER
+CFLAGS    = -g -std=c++11 -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DSCHED_ANALYZER
 ifeq "$(shell getconf LONG_BIT)" "64"
-  LDFLAGS = -lyaml-cpp
+  LDFLAGS = -lyaml-cpp `pkg-config --cflag opencv` `pkg-config --libs opencv`
 else
   LDFLAGS =
 endif
@@ -29,7 +29,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 all: clean $(TARGET)
 
-run: 
+run:
 	$(TARGET)
 
 clean:

@@ -134,32 +134,8 @@ node_t *get_target(node_t *node);
 void finish_target(node_t *root_node, node_t *node);
 bool is_leaf_node(node_t *root_node, node_t *node);
 
-SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer() : test(0) {
+SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer() : NodeGraph(), test(0) {
   root_node = make_root_node();
-  //    node_t* node15 = make_node(15);
-  //    node_t* node14 = make_node(14);
-  //    node_t* node13 = make_node(13);
-  //    node_t* node12 = make_node(12);
-  //    node_t* node11 = make_node(11);
-  //    node_t* node21 = make_node(21);
-  //    node_t* node22 = make_node(22);
-  //    node_t* node23 = make_node(23);
-  //    int index = 31;
-  //    node_t* node31 = make_node(get_node_name(index), index,
-  //                               get_node_core(index),
-  //                               get_node_subtopic(index),
-  //                               get_node_pubtopic(index));
-  //    index = 32;
-  //    node_t* node32 = make_node(get_node_name(index),index,
-  //                               get_node_core(index),
-  //                               get_node_subtopic(index),
-  //                               get_node_pubtopic(index));
-  //    index = 33;
-  //    node_t* node33 = make_node(get_node_name(index), index,
-  //                               get_node_core(index),
-  //                               get_node_subtopic(index),
-  //                               get_node_pubtopic(index));
-
   for (int index = 0; index < get_node_list_size(); ++index) {
     v_node_.push_back(make_node(get_node_name(index), index,
                                 get_node_core(index), get_node_subtopic(index),
@@ -167,9 +143,18 @@ SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer() : test(0) {
     insert_child_node(root_node, v_node_.at(index));
   }
 
-  //    insert_child_node(root_node, node31);
-  //    insert_child_node(node31, node32);
-  //    insert_child_node(node32, node33);
+  show_tree_dfs(root_node);
+}
+
+SingletonNodeGraphAnalyzer::SingletonNodeGraphAnalyzer(const std::string &filename) :  NodeGraph(filename), test(0) {
+  root_node = make_root_node();
+  for (int index = 0; index < get_node_list_size(); ++index) {
+    v_node_.push_back(make_node(get_node_name(index), index,
+                                get_node_core(index), get_node_subtopic(index),
+                                get_node_pubtopic(index)));
+    insert_child_node(root_node, v_node_.at(index));
+  }
+
   show_tree_dfs(root_node);
 }
 
