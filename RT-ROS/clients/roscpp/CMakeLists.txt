@@ -119,6 +119,7 @@ add_library(roscpp
   src/librosch/analyzer.cpp
   src/librosch/time.cpp
   src/librosch/exec_time.cpp
+  src/librosch/core_count_manager.cpp
   )
 
 add_dependencies(roscpp roscpp_gencpp rosgraph_msgs_gencpp std_msgs_gencpp)

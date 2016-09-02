@@ -4,19 +4,21 @@
 #include <string>
 #include <fstream>
 #include "ros_rosch/node_graph.hpp"
+#include "ros_rosch/core_count_manager.hpp"
 
-
-namespace rosch {
-class Analyzer : ExecTime {
-public:
-    explicit Analyzer(const std::string& node_name,
-                      const std::string& topic,
-                      const unsigned int& max_times=300,
-                      const unsigned int& ignore_times=50);
+namespace rosch
+{
+class Analyzer : ExecTime
+{
+  public:
+    explicit Analyzer(const std::string &node_name,
+                      const std::string &topic,
+                      const unsigned int &max_times = 100,
+                      const unsigned int &ignore_times = 20);
     ~Analyzer();
-    void start_time(); //
-    void end_time(); //
-    void finish_myself();  //
+    void start_time();    //
+    void end_time();      //
+    void finish_myself(); //
     unsigned int get_counter();
     double get_max_time_ms();
     double get_min_time_ms();
@@ -32,8 +34,12 @@ public:
     std::string get_node_name();
     std::string get_topic_name();
     void update_graph();
-private:
-    SingletonNodeGraphAnalyzer* graph_analyzer_;
+    bool check_need_refresh();
+    void core_refresh();
+
+  private:
+    SingletonNodeGraphAnalyzer *graph_analyzer_;
+    SingletonCoreCountManager *core_count_manager_;
     void open_output_file(bool init);
     bool set_affinity(int core);
     unsigned int max_analyze_times_;

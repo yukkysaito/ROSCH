@@ -25,7 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "ros/subscription_queue.h"
 #include "ros/message_deserializer.h"
 #include "ros/subscription_callback_helper.h"
@@ -40,25 +39,22 @@
 namespace ros
 {
 
-SubscriptionQueue::SubscriptionQueue(const std::string& topic, int32_t queue_size, bool allow_concurrent_callbacks)
-: topic_(topic)
-, size_(queue_size)
-, full_(false)
-, queue_size_(0)
-, allow_concurrent_callbacks_(allow_concurrent_callbacks)
+SubscriptionQueue::SubscriptionQueue(const std::string &topic, int32_t queue_size, bool allow_concurrent_callbacks)
+    : topic_(topic), size_(queue_size), full_(false), queue_size_(0), allow_concurrent_callbacks_(allow_concurrent_callbacks)
 #ifdef ROSCH
-, analyzer(rosch::get_node_name(),topic)
+      ,
+      analyzer(rosch::get_node_name(), topic)
 #endif
-{}
+{
+}
 
 SubscriptionQueue::~SubscriptionQueue()
 {
-
 }
 
-void SubscriptionQueue::push(const SubscriptionCallbackHelperPtr& helper, const MessageDeserializerPtr& deserializer,
-                                 bool has_tracked_object, const VoidConstWPtr& tracked_object, bool nonconst_need_copy,
-                                 ros::Time receipt_time, bool* was_full)
+void SubscriptionQueue::push(const SubscriptionCallbackHelperPtr &helper, const MessageDeserializerPtr &deserializer,
+                             bool has_tracked_object, const VoidConstWPtr &tracked_object, bool nonconst_need_copy,
+                             ros::Time receipt_time, bool *was_full)
 {
   boost::mutex::scoped_lock lock(queue_mutex_);
 
@@ -67,7 +63,7 @@ void SubscriptionQueue::push(const SubscriptionCallbackHelperPtr& helper, const 
     *was_full = false;
   }
 
-  if(fullNoLock())
+  if (fullNoLock())
   {
     queue_.pop_front();
     --queue_size_;
@@ -165,48 +161,63 @@ CallbackInterface::CallResult SubscriptionQueue::call()
     try
     {
       self = shared_from_this();
-      }
-      catch (boost::bad_weak_ptr&) // For the tests, where we don't create a shared_ptr
-      {}
-  #ifdef ROSCH
-      bool is_target(analyzer.is_target());
-      bool is_in_range(analyzer.is_in_range());
-      rosch::SingletonNodeGraphAnalyzer& node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
-      if(topic_ != "/clock") {
+    }
+    catch (boost::bad_weak_ptr &) // For the tests, where we don't create a shared_ptr
+    {
+    }
+#ifdef ROSCH
+    bool is_target(analyzer.is_target());
+    bool is_in_range;
+    rosch::SingletonNodeGraphAnalyzer &node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
+    if (topic_ != "/clock")
+    {
       analyzer.update_graph();
-      if(is_target) {
-          analyzer.set_rt();
-          if(is_in_range) {
-              analyzer.start_time();
-          }
-      }
-      }
-  #endif
-      SubscriptionCallbackHelperCallParams params;
-      params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-      i.helper->call(params);
-  #ifdef ROSCH
-      if(topic_ != "/clock") {
-          if(is_target) {
-              if(is_in_range) {
-                analyzer.end_time();
-            } else {
-                analyzer.finish_myself();
-                analyzer.set_fair();
-            }
-            ROS_INFO("target:%d %d[name:%s][topic:%s][%d] time:%f(min:%f  max:%f)\n",
-                     analyzer.get_target_index(),
-                     node_graph_analyzer.get_node_index(analyzer.get_node_name()),
-                     analyzer.get_node_name().c_str(),
-                     analyzer.get_topic_name().c_str(),
-                     analyzer.get_counter(),
-                     analyzer.get_exec_time_ms(),
-                     analyzer.get_min_time_ms(),
-                     analyzer.get_max_time_ms()
-                     );
-
+      if (is_target)
+      {
+        analyzer.set_rt();
+        if (analyzer.check_need_refresh())
+        {
+          analyzer.core_refresh();
         }
+        is_in_range = analyzer.is_in_range();
+        if (is_in_range)
+        {
+          analyzer.start_time();
         }
+      }
+    }
+#endif
+    SubscriptionCallbackHelperCallParams params;
+    params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
+    i.helper->call(params);
+#ifdef ROSCH
+    if (topic_ != "/clock")
+    {
+      if (is_target)
+      {
+        if (is_in_range)
+        {
+          analyzer.end_time();
+        }
+        else
+        {
+          analyzer.finish_myself();
+        }
+        ROS_INFO("target:%d %d[name:%s][topic:%s][%d] time:%f(min:%f  max:%f)\n",
+                 analyzer.get_target_index(),
+                 node_graph_analyzer.get_node_index(analyzer.get_node_name()),
+                 analyzer.get_node_name().c_str(),
+                 analyzer.get_topic_name().c_str(),
+                 analyzer.get_counter(),
+                 analyzer.get_exec_time_ms(),
+                 analyzer.get_min_time_ms(),
+                 analyzer.get_max_time_ms());
+      }
+      else
+      {
+        analyzer.set_fair();
+      }
+    }
 #endif
   }
 
@@ -228,6 +239,4 @@ bool SubscriptionQueue::fullNoLock()
 {
   return (size_ > 0) && (queue_size_ >= (uint32_t)size_);
 }
-
 }
-
