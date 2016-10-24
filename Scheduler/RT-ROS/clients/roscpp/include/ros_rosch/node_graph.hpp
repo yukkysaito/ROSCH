@@ -1,7 +1,7 @@
 #ifndef NODE_GRAPH_HPP
 #define NODE_GRAPH_HPP
-#include "config.h"
-#include "spec.h"
+#include "ros_rosch/config.h"
+#include "ros_rosch/spec.h"
 #include "yaml-cpp/yaml.h"
 #include <map>
 #include <string>
@@ -53,7 +53,7 @@ public:
 
 private:
   Config config_;
-  void load_config(const std::string &filename);
+  void load_config_(const std::string &filename);
   std::vector<node_info_t> v_node_info_;
 };
 

@@ -28,12 +28,19 @@
 #include "ros/subscription_queue.h"
 #include "ros/message_deserializer.h"
 #include "ros/subscription_callback_helper.h"
-#define ROSCH
+//#define ROSCH
 #ifdef ROSCH
 #include <ctime>
 #include <sched.h>
 #include "ros_rosch/bridge.hpp"
 #include "ros_rosch/node_graph.hpp"
+#endif
+#define ROSCHEDULER
+#ifdef ROSCHEDULER
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
+#include <poll.h>
+#include "ros_rosch/event_notification.hpp"
 #endif
 
 namespace ros
@@ -165,63 +172,29 @@ CallbackInterface::CallResult SubscriptionQueue::call()
     catch (boost::bad_weak_ptr &) // For the tests, where we don't create a shared_ptr
     {
     }
-#ifdef ROSCH
-    bool is_target(analyzer.is_target());
-    bool is_in_range;
-    rosch::SingletonNodeGraphAnalyzer &node_graph_analyzer = rosch::SingletonNodeGraphAnalyzer::getInstance();
-    if (topic_ != "/clock")
-    {
-      analyzer.update_graph();
-      if (is_target)
-      {
-        analyzer.set_rt();
-        if (analyzer.check_need_refresh())
-        {
-          analyzer.core_refresh();
-        }
-        is_in_range = analyzer.is_in_range();
-        if (is_in_range)
-        {
-          analyzer.start_time();
-        }
-      }
-    }
-#endif
     SubscriptionCallbackHelperCallParams params;
     params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-    i.helper->call(params);
-#ifdef ROSCH
-    if (topic_ != "/clock")
-    {
-      if (is_target)
-      {
-        if (is_in_range)
-        {
-          analyzer.end_time();
-        }
-        else
-        {
-          analyzer.finish_myself();
-        }
-        ROS_INFO("target:%d %d[name:%s][topic:%s][%d] time:%f(min:%f  max:%f)\n",
-                 analyzer.get_target_index(),
-                 node_graph_analyzer.get_node_index(analyzer.get_node_name()),
-                 analyzer.get_node_name().c_str(),
-                 analyzer.get_topic_name().c_str(),
-                 analyzer.get_counter(),
-                 analyzer.get_exec_time_ms(),
-                 analyzer.get_min_time_ms(),
-                 analyzer.get_max_time_ms());
-      }
-      else
-      {
-        analyzer.set_fair();
-      }
-    }
-#endif
+    boost::thread app_th(boost::bind(&ros::SubscriptionQueue::appThread, this, i, params));
+//    i.helper->call(params);
+    waitAppThread();
+//    app_th.join();
   }
 
   return CallbackInterface::Success;
+
+}
+
+void SubscriptionQueue::waitAppThread()
+{
+    int ret;
+    ret = event_notification.update(10000);
+    std::cout << ret <<std::endl;
+}
+
+void SubscriptionQueue::appThread(Item i, SubscriptionCallbackHelperCallParams params)
+{
+    i.helper->call(params);
+    event_notification.signal();
 }
 
 bool SubscriptionQueue::ready()

@@ -65,11 +65,11 @@
 #include <cstdlib>
 
 /* RESCH */
-#include <resch/api.h>
+//#include <resch/api.h>
 //#define __RESCH_DEBUG__
 /* Node graph */
-#include "ros_rosch/node_graph.hpp"
-#include "ros_rosch/bridge.hpp"
+//#include "ros_rosch/node_graph.hpp"
+//#include "ros_rosch/bridge.hpp"
 
 namespace ros
 {
@@ -469,7 +469,7 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
      * set real-time scheduling
      */
 //      rosch::NodeGraph node_graph;
-      ros_rt_init(name.c_str());
+//      ros_rt_init(name.c_str());
       // error -1:get_node_index()
 //      ros_rt_set_node(node_graph.get_node_index(rosch::get_node_name()));
 

@@ -54,7 +54,7 @@
 #else
 	#include <poll.h> // should get cmake to explicitly check for poll.h?
 	#include <sys/poll.h>
-	#include <arpa/inet.h>
+    #include <arpa/inet.h>
 	#include <netdb.h>
     #include <unistd.h>
     #include <netdb.h>       // getnameinfo in network.cpp
@@ -205,4 +205,3 @@ inline void close_signal_pair(signal_fd_t signal_pair[2]) {
 } // namespace ros
 
 #endif /* ROSCPP_IO_H_ */
-

@@ -13,7 +13,7 @@ NodeGraph::NodeGraph() : v_node_info_(0), config_() {
 
 NodeGraph::~NodeGraph() {}
 
-void NodeGraph::load_config(const std::string &filename) {
+void NodeGraph::load_config_(const std::string &filename) {
   try {
     YAML::Node node_list;
     node_list = YAML::LoadFile(filename);

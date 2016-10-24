@@ -1,4 +1,4 @@
-#include "config.h"
+#include "ros_rosch/config.h"
 #include <stdlib.h>
 #include <string>
 #include <sys/types.h>
@@ -26,7 +26,7 @@ std::string Config::get_basename(const std::string &path) {
   return path.substr(path.find_last_of('/') + 1);
 }
 std::string Config::get_selfpath() {
-  char buff[PATH_MAX];
+  char buff[SELF_PATH_LENGTH_MAX];
   ssize_t len = readlink("/proc/self/exe", buff, sizeof(buff) - 1);
   if (len != -1) {
     buff[len] = '\0';

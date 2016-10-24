@@ -38,8 +38,11 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <deque>
 
+//ROSCHEDULER
+#include "ros/subscription_callback_helper.h"
+#include "ros_rosch/event_notification.hpp"
 //ROSCH
-#define ROSCH_H
+//#define ROSCH_H
 #ifdef ROSCH_H
 #include "ros_rosch/analyzer.hpp"
 #endif
@@ -73,14 +76,17 @@ public:
   SubscriptionQueue(const std::string& topic, int32_t queue_size, bool allow_concurrent_callbacks);
   ~SubscriptionQueue();
 
-  void push(const SubscriptionCallbackHelperPtr& helper, const MessageDeserializerPtr& deserializer, 
-	    bool has_tracked_object, const VoidConstWPtr& tracked_object, bool nonconst_need_copy, 
+  void push(const SubscriptionCallbackHelperPtr& helper, const MessageDeserializerPtr& deserializer,
+	    bool has_tracked_object, const VoidConstWPtr& tracked_object, bool nonconst_need_copy,
 	    ros::Time receipt_time = ros::Time(), bool* was_full = 0);
   void clear();
 
   virtual CallbackInterface::CallResult call();
   virtual bool ready();
   bool full();
+//ROSCHEDULER
+  void appThread(Item i, SubscriptionCallbackHelperCallParams params);
+  void waitAppThread();
 
 private:
   bool fullNoLock();
@@ -94,6 +100,9 @@ private:
   bool allow_concurrent_callbacks_;
 
   boost::recursive_mutex callback_mutex_;
+
+//ROSCHEDULER
+  rosch::EventNotification event_notification;
 
 #ifdef ROSCH_H
   rosch::Analyzer analyzer;
