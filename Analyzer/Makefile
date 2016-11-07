@@ -1,7 +1,7 @@
 COMPILER  = g++
 CFLAGS    = -g -std=c++11 -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers -DSCHED_ANALYZER
 ifeq "$(shell getconf LONG_BIT)" "64"
-  LDFLAGS = -lyaml-cpp `pkg-config --cflag opencv` `pkg-config --libs opencv`
+  LDFLAGS = -lyaml-cpp `pkg-config --cflags opencv` `pkg-config --libs opencv` -L/usr/local/cuda-7.5/lib64
 else
   LDFLAGS =
 endif

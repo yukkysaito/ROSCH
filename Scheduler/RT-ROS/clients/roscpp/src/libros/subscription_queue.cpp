@@ -177,7 +177,6 @@ CallbackInterface::CallResult SubscriptionQueue::call()
     boost::thread app_th(boost::bind(&ros::SubscriptionQueue::appThread, this, i, params));
 //    i.helper->call(params);
     waitAppThread();
-//    app_th.join();
   }
 
   return CallbackInterface::Success;
@@ -187,8 +186,9 @@ CallbackInterface::CallResult SubscriptionQueue::call()
 void SubscriptionQueue::waitAppThread()
 {
     int ret;
-    ret = event_notification.update(10000);
+    ret = event_notification.update(1000);
     std::cout << ret <<std::endl;
+    //   if(ret != 1)
 }
 
 void SubscriptionQueue::appThread(Item i, SubscriptionCallbackHelperCallParams params)

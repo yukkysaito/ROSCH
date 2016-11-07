@@ -114,13 +114,13 @@ add_library(roscpp
   src/libros/poll_set.cpp
   src/libros/service.cpp
   src/libros/this_node.cpp
-  # src/librosch/node_graph.cpp
+  src/librosch/node_graph.cpp
   # src/librosch/bridge.cpp
   # src/librosch/analyzer.cpp
   # src/librosch/time.cpp
   # src/librosch/exec_time.cpp
   # src/librosch/core_count_manager.cpp
-  # src/librosch/config.cpp
+  src/librosch/config.cpp
   src/librosch/event_notification.cpp
   )
 

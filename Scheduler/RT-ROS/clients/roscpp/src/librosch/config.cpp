@@ -8,7 +8,9 @@ using namespace rosch;
 
 Config::Config(const std::string &config_file, const std::string &spec_file)
     : config_file_(config_file), spec_file_(spec_file) {}
+
 Config::~Config() {}
+
 std::string Config::get_configpath() {
   std::string self_path(get_selfpath());
   return get_dirname(self_path) + "/../../" + config_file_;
@@ -22,6 +24,7 @@ std::string Config::get_specpath() {
 std::string Config::get_dirname(const std::string &path) {
   return path.substr(0, path.find_last_of('/'));
 }
+
 std::string Config::get_basename(const std::string &path) {
   return path.substr(path.find_last_of('/') + 1);
 }
