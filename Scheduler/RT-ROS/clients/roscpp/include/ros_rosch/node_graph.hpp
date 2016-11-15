@@ -14,12 +14,12 @@ public:
     NodesInfo();
     NodesInfo(const std::string &filename);
     ~NodesInfo();
-    NodeInfo GetNodeInfo(const int index);
-    NodeInfo GetNodeInfo(const std::string name);
-    size_t GetNodeListSize(void);
+    NodeInfo getNodeInfo(const int index);
+    NodeInfo getNodeInfo(const std::string name);
+    size_t getNodeListSize(void);
 private:
   Config config_;
-  void LoadConfig(const std::string &filename);
+  void loadConfig(const std::string &filename);
   std::vector<NodeInfo> v_node_info_;
 };
 }

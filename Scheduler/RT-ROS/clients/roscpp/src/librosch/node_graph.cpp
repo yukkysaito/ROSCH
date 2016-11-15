@@ -9,12 +9,12 @@ using namespace rosch;
 
 NodesInfo::NodesInfo() : v_node_info_(0), config_() {
     std::string filename(config_.get_configpath());
-    LoadConfig(filename);
+    loadConfig(filename);
 }
 
 NodesInfo::~NodesInfo() {}
 
-void NodesInfo::LoadConfig(const std::string &filename) {
+void NodesInfo::loadConfig(const std::string &filename) {
   try {
     YAML::Node node_list;
     node_list = YAML::LoadFile(filename);
@@ -22,11 +22,9 @@ void NodesInfo::LoadConfig(const std::string &filename) {
       const YAML::Node name = node_list[i]["nodename"];
       const YAML::Node index = node_list[i]["nodeindex"];
       const YAML::Node core = node_list[i]["core"];
-      const YAML::Node proc_core = node_list[i]["proc_core"];
-      const YAML::Node start_time = node_list[i]["start_time"];
-      const YAML::Node run_time = node_list[i]["run_time"];
       const YAML::Node subtopic = node_list[i]["sub_topic"];
       const YAML::Node pubtopic = node_list[i]["pub_topic"];
+      const YAML::Node sched_info = node_list[i]["sched_info"];
 
       NodeInfo node_info;
       node_info.name = name.as<std::string>();
@@ -45,14 +43,15 @@ void NodesInfo::LoadConfig(const std::string &filename) {
       }
 
       node_info.v_sched_info.resize(0);
-      for (int idx(0); idx < proc_core.size(); ++idx) {
-          SchedInfo sched_info;
-          sched_info.core = proc_core.as<int>();
-          sched_info.run_time = run_time.as<int>();
-          sched_info.start_time = start_time.as<int>();
-          sched_info.end_time = sched_info.start_time + sched_info.run_time;
-          node_info.v_sched_info.push_back(sched_info);
+      for (int idx(0); idx < sched_info.size(); ++idx) {
+          SchedInfo sched_info_element;
+          sched_info_element.core = sched_info[idx]["core"].as<int>();
+          sched_info_element.run_time = sched_info[idx]["run_time"].as<int>();
+          sched_info_element.start_time = sched_info[idx]["start_time"].as<int>();
+          sched_info_element.end_time = sched_info_element.start_time + sched_info_element.run_time;
+          node_info.v_sched_info.push_back(sched_info_element);
       }
+
       v_node_info_.push_back(node_info);
     }
   } catch (YAML::Exception &e) {
@@ -60,7 +59,7 @@ void NodesInfo::LoadConfig(const std::string &filename) {
   }
 }
 
-NodeInfo NodesInfo::GetNodeInfo(const int index)
+NodeInfo NodesInfo::getNodeInfo(const int index)
 {
     try {
         for (int idx(0); idx < v_node_info_.size(); ++idx) {
@@ -74,7 +73,7 @@ NodeInfo NodesInfo::GetNodeInfo(const int index)
     }
 }
 
-NodeInfo NodesInfo::GetNodeInfo(const std::string name)
+NodeInfo NodesInfo::getNodeInfo(const std::string name)
 {
     try {
         for (int idx(0); idx < v_node_info_.size(); ++idx) {
@@ -88,4 +87,4 @@ NodeInfo NodesInfo::GetNodeInfo(const std::string name)
     }
 }
 
-size_t NodesInfo::GetNodeListSize(void) { return v_node_info_.size(); }
+size_t NodesInfo::getNodeListSize(void) { return v_node_info_.size(); }
