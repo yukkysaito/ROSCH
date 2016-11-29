@@ -121,6 +121,8 @@ add_library(roscpp
   # src/librosch/exec_time.cpp
   # src/librosch/core_count_manager.cpp
   src/librosch/config.cpp
+  src/librosch/sched_node.cpp
+  src/librosch/task_attribute_processer.cpp
   src/librosch/event_notification.cpp
   )
 

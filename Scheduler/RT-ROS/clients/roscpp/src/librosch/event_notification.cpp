@@ -37,123 +37,97 @@
 #include <boost/bind.hpp>
 
 #include <fcntl.h>
+#include <iostream>
 #include <poll.h> // should get cmake to explicitly check for poll.h?
 #include <sys/poll.h>
-#include <iostream>
 
-namespace rosch
-{
+namespace rosch {
 
-EventNotification::EventNotification()
-{
-	if ( createSignalPair(signal_pipe_) != 0 ) {
-        std::cerr << "create_signal_pair() failed" << std::endl;
-        exit(-1);
+EventNotification::EventNotification() {
+  if (createSignalPair(signal_pipe_) != 0) {
+    std::cerr << "create_signal_pair() failed" << std::endl;
+    exit(-1);
   }
 }
 
-EventNotification::~EventNotification()
-{
-//  close_signal_pair(signal_pipe_);
-	::close(signal_pipe_[0]);
-	::close(signal_pipe_[1]);
+EventNotification::~EventNotification() {
+  //  close_signal_pair(signal_pipe_);
+  ::close(signal_pipe_[0]);
+  ::close(signal_pipe_[1]);
 }
 
-int EventNotification::createSignalPair(int signal_pair[2])
-{
-	signal_pair[0] = -1;
-	signal_pair[1] = -1;
+int EventNotification::createSignalPair(int signal_pair[2]) {
+  signal_pair[0] = -1;
+  signal_pair[1] = -1;
 
-    if(pipe(signal_pair) != 0) {
-        std::cerr << "pipe() failed" << std::endl;
-        return -1;
-	}
-	if(fcntl(signal_pair[0], F_SETFL, O_NONBLOCK) == -1) {
-		std::cerr << "fcntl() failed" << std::endl;
-		return -1;
-	}
-	if(fcntl(signal_pair[1], F_SETFL, O_NONBLOCK) == -1) {
-		std::cerr << "fcntl() failed" << std::endl;
-		return -1;
-	}
-	return 0;
+  if (pipe(signal_pair) != 0) {
+    std::cerr << "pipe() failed" << std::endl;
+    return -1;
+  }
+  if (fcntl(signal_pair[0], F_SETFL, O_NONBLOCK) == -1) {
+    std::cerr << "fcntl() failed" << std::endl;
+    return -1;
+  }
+  if (fcntl(signal_pair[1], F_SETFL, O_NONBLOCK) == -1) {
+    std::cerr << "fcntl() failed" << std::endl;
+    return -1;
+  }
+  return 0;
 }
 
+void EventNotification::signal() {
+  boost::mutex::scoped_try_lock lock(signal_mutex_);
 
-void EventNotification::signal()
-{
-    boost::mutex::scoped_try_lock lock(signal_mutex_);
-
-    if (lock.owns_lock())
-    {
-        char b = 0;
-//    if (write_signal(signal_pipe_[1], &b, 1) < 0)
-        if (write(signal_pipe_[1], &b, 1) < 0 )
-        {
-            // do nothing... this prevents warnings on gcc 4.3
-        }
+  if (lock.owns_lock()) {
+    char b = 0;
+    //    if (write_signal(signal_pipe_[1], &b, 1) < 0)
+    if (write(signal_pipe_[1], &b, 1) < 0) {
+      // do nothing... this prevents warnings on gcc 4.3
     }
+  }
 }
 
+int EventNotification::update(int poll_timeout) {
+  // Poll across the sockets we're servicing
+  int ret;
+  int events = POLLIN;
+  struct pollfd poll_fd = {signal_pipe_[0], events, 0};
 
-int EventNotification::update(int poll_timeout)
-{
-    // Poll across the sockets we're servicing
-    int ret;
-    int events = POLLIN;
-    struct pollfd poll_fd = {
-        signal_pipe_[0],
-        events,
-        0
+  if ((ret = poll(&poll_fd, 1, poll_timeout)) < 0) {
+    std::cerr << "poll failed with error " << std::endl;
+    return -1;
+  } else if (ret == 0) {
+    return 0;
+  } else if (ret > 0) // ret = 0 implies the poll timed out, nothing to do
+  {
+    // We have one or more sockets to service
+    if (poll_fd.revents == 0) {
+      return -1;
+    }
+
+    // If these are registered events for this socket, OR the events are
+    // ERR/HUP/NVAL,
+    // call through to the registered function
+    int revents = poll_fd.revents;
+    if (((events & revents) || (revents & POLLERR) || (revents & POLLHUP) ||
+         (revents & POLLNVAL))) {
+      poll_fd.revents = 0;
+      if (revents & (POLLNVAL | POLLERR | POLLHUP)) {
+        return -1;
+      }
+      onLocalPipeEvents(revents & (events | POLLERR | POLLHUP | POLLNVAL));
+    }
+  }
+  return 1;
+}
+
+void EventNotification::onLocalPipeEvents(int events) {
+  if (events & POLLIN) {
+    char b;
+    //    while(read_signal(signal_pipe_[0], &b, 1) > 0)
+    while (read(signal_pipe_[0], &b, 1) > 0) {
+      // do nothing keep draining
     };
-
-    if((ret = poll(&poll_fd, 1, poll_timeout)) < 0)
-    {
-        std::cerr << "poll failed with error " << std::endl;
-        return -1;
-    }
-    else if (ret == 0)
-    {
-        return 0;
-    }
-    else if (ret > 0)  // ret = 0 implies the poll timed out, nothing to do
-    {
-        // We have one or more sockets to service
-        if (poll_fd.revents == 0)
-        {
-            return -1;
-        }
-
-        // If these are registered events for this socket, OR the events are ERR/HUP/NVAL,
-        // call through to the registered function
-        int revents = poll_fd.revents;
-        if (((events & revents)
-             || (revents & POLLERR)
-             || (revents & POLLHUP)
-             || (revents & POLLNVAL)))
-        {
-            poll_fd.revents = 0;
-            if (revents & (POLLNVAL|POLLERR|POLLHUP))
-            {
-                return -1;
-            }
-            onLocalPipeEvents(revents & (events|POLLERR|POLLHUP|POLLNVAL));
-        }
-    }
-    return 1;
-}
-
-
-void EventNotification::onLocalPipeEvents(int events)
-{
-    if(events & POLLIN)
-    {
-        char b;
-//    while(read_signal(signal_pipe_[0], &b, 1) > 0)
-        while(read(signal_pipe_[0], &b, 1) > 0)
-        {
-            //do nothing keep draining
-        };
-    }
+  }
 }
 }

@@ -28,39 +28,41 @@
 #ifndef ROSCPP_SUBSCRIPTION_QUEUE_H
 #define ROSCPP_SUBSCRIPTION_QUEUE_H
 
-#include "forwards.h"
-#include "common.h"
-#include "ros/message_event.h"
 #include "callback_queue_interface.h"
+#include "common.h"
+#include "forwards.h"
+#include "ros/message_event.h"
 
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <deque>
 
-//ROSCHEDULER
+// ROSCHEDULER
 #include "ros/subscription_callback_helper.h"
 #include "ros_rosch/event_notification.hpp"
-//ROSCH
+#include "ros_rosch/type.h"
+#include "ros_rosch/task_attribute_processer.h"
+// ROSCH
 //#define ROSCH_H
 #ifdef ROSCH_H
 #include "ros_rosch/analyzer.hpp"
 #endif
 
-namespace ros
-{
+namespace ros {
 
 class MessageDeserializer;
 typedef boost::shared_ptr<MessageDeserializer> MessageDeserializerPtr;
 
 class SubscriptionCallbackHelper;
-typedef boost::shared_ptr<SubscriptionCallbackHelper> SubscriptionCallbackHelperPtr;
+typedef boost::shared_ptr<SubscriptionCallbackHelper>
+    SubscriptionCallbackHelperPtr;
 
-class ROSCPP_DECL SubscriptionQueue : public CallbackInterface, public boost::enable_shared_from_this<SubscriptionQueue>
-{
+class ROSCPP_DECL SubscriptionQueue
+    : public CallbackInterface,
+      public boost::enable_shared_from_this<SubscriptionQueue> {
 private:
-  struct Item
-  {
+  struct Item {
     SubscriptionCallbackHelperPtr helper;
     MessageDeserializerPtr deserializer;
 
@@ -73,18 +75,20 @@ private:
   typedef std::deque<Item> D_Item;
 
 public:
-  SubscriptionQueue(const std::string& topic, int32_t queue_size, bool allow_concurrent_callbacks);
+  SubscriptionQueue(const std::string &topic, int32_t queue_size,
+                    bool allow_concurrent_callbacks);
   ~SubscriptionQueue();
 
-  void push(const SubscriptionCallbackHelperPtr& helper, const MessageDeserializerPtr& deserializer,
-	    bool has_tracked_object, const VoidConstWPtr& tracked_object, bool nonconst_need_copy,
-	    ros::Time receipt_time = ros::Time(), bool* was_full = 0);
+  void push(const SubscriptionCallbackHelperPtr &helper,
+            const MessageDeserializerPtr &deserializer, bool has_tracked_object,
+            const VoidConstWPtr &tracked_object, bool nonconst_need_copy,
+            ros::Time receipt_time = ros::Time(), bool *was_full = 0);
   void clear();
 
   virtual CallbackInterface::CallResult call();
   virtual bool ready();
   bool full();
-//ROSCHEDULER
+  // ROSCHEDULER
   void appThread(Item i, SubscriptionCallbackHelperCallParams params);
   void waitAppThread();
 
@@ -101,14 +105,21 @@ private:
 
   boost::recursive_mutex callback_mutex_;
 
-//ROSCHEDULER
+  // ROSCHEDULER
   rosch::EventNotification event_notification;
-
+  NodeInfo node_info_;
+  int num_of_called_topics_;
+  bool need_rt_;
+  rosch::TaskAttributeProcesser task_attr_processer_;
+  typedef struct SchedPointInfo {
+    int sched_point_ms;
+    std::vector<int> v_core_set;
+  } SchedPointInfo;
+  std::vector<SchedPointInfo> v_sched_point_info;
 #ifdef ROSCH_H
   rosch::Analyzer analyzer;
 #endif
 };
-
 }
 
 #endif // ROSCPP_SUBSCRIPTION_QUEUE_H

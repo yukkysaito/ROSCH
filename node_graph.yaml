@@ -5,6 +5,7 @@
   pub_topic:
   - /points_raw
   run_time : 1
+  sched_info:
 
 - nodename: /camera_driver
   nodeindex: 33
@@ -13,21 +14,28 @@
   pub_topic:
   - /image_raw
   run_time : 1
+  sched_info:
 
 - nodename: /vel_pose_mux
   nodeindex: 33
-  core : 1
+  core : 3
   sub_topic:
   - /ndt_pose
   pub_topic:
   - /current_pose
   run_time : 10
-  sched_info:
+  sched_info: # please write order of start_time + run_time
     - core : 1
+      priority : 98
       start_time : 0
       run_time : 10
     - core : 2
+      priority : 98
       start_time : 0
+      run_time : 20
+    - core : 3
+      priority : 98
+      start_time : 10
       run_time : 10
 
 - nodename: /ndt_matching
@@ -38,6 +46,7 @@
   pub_topic:
   - /ndt_pose
   run_time : 1
+  sched_info:
 
 - nodename: /euclidean_cluster
   nodeindex: 41
@@ -47,6 +56,7 @@
   pub_topic:
   - /cluster_centroids
   run_time : 8
+  sched_info:
 
 - nodename: /voxel_grid_filter
   nodeindex: 32
@@ -56,6 +66,7 @@
   pub_topic:
   - /filtered_points
   run_time : 3
+  sched_info:
 
 - nodename: /points2vscan
   nodeindex: 34
@@ -65,6 +76,7 @@
   pub_topic:
   - /vscan_points
   run_time : 2
+  sched_info:
 
 - nodename: /points2image
   nodeindex: 35
@@ -74,6 +86,7 @@
   pub_topic:
   - /points_image
   run_time : 30
+  sched_info:
 
 - nodename: /obj_car/dpm
   nodeindex: 36
@@ -83,6 +96,7 @@
   pub_topic:
   - /obj_car/image_obj
   run_time : 1
+  sched_info:
 
 - nodename: /obj_car/ranging
   nodeindex: 36
@@ -93,6 +107,7 @@
   pub_topic:
   - /obj_car/image_obj_ranged
   run_time : 5
+  sched_info:
 
 - nodename: /obj_car/tracking
   nodeindex: 36
@@ -102,6 +117,7 @@
   pub_topic:
   - /obj_car/image_obj_tracked
   run_time : 18
+  sched_info:
 
 - nodename: /obj_car/fusion
   nodeindex: 36
@@ -112,6 +128,7 @@
   pub_topic:
   - /obj_car/obj_pose
   run_time : 10
+  sched_info:
 
 - nodename: /obj_car/reprojection
   nodeindex: 36
@@ -122,3 +139,4 @@
   pub_topic:
   - /obj_car/obj_label
   run_time : 13
+  sched_info:

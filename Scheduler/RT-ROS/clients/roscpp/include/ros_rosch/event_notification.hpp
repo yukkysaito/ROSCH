@@ -35,16 +35,14 @@
 #ifndef EVENT_NOTIFICATON_HPP
 #define EVENT_NOTIFICATON_HPP
 
-#include <vector>
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
+#include <vector>
 
-namespace rosch
-{
+namespace rosch {
 
-class EventNotification
-{
+class EventNotification {
 public:
   EventNotification();
   ~EventNotification();
@@ -57,14 +55,17 @@ public:
    *
    * update() may only be called from one thread at a time
    *
-   * \param poll_timeout The time, in milliseconds, for the poll() call to timeout after
-   * if there are no events.  Note that this does not provide an upper bound for the entire
+   * \param poll_timeout The time, in milliseconds, for the poll() call to
+   * timeout after
+   * if there are no events.  Note that this does not provide an upper bound for
+   * the entire
    * function, just the call to poll()
    */
   int update(int poll_timeout);
 
   /**
-   * \brief Signal our poll() call to finish if it's blocked waiting (see the poll_timeout
+   * \brief Signal our poll() call to finish if it's blocked waiting (see the
+   * poll_timeout
    * option for update()).
    */
   void signal();
@@ -83,7 +84,6 @@ private:
   boost::mutex signal_mutex_;
   int signal_pipe_[2];
 };
-
 }
 
 #endif // EVENT_NOTIFICATON_HPP

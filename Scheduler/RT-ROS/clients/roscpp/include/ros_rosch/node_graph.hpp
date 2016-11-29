@@ -20,6 +20,7 @@ public:
 private:
   Config config_;
   void loadConfig(const std::string &filename);
+  void createEmptyNodeInfo(NodeInfo *node_info);
   std::vector<NodeInfo> v_node_info_;
 };
 }
