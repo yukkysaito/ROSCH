@@ -41,8 +41,6 @@
 // ROSCHEDULER
 #include "ros/subscription_callback_helper.h"
 #include "ros_rosch/event_notification.hpp"
-#include "ros_rosch/type.h"
-#include "ros_rosch/task_attribute_processer.h"
 // ROSCH
 //#define ROSCH_H
 #ifdef ROSCH_H
@@ -107,15 +105,7 @@ private:
 
   // ROSCHEDULER
   rosch::EventNotification event_notification;
-  NodeInfo node_info_;
-  int num_of_called_topics_;
-  bool need_rt_;
-  rosch::TaskAttributeProcesser task_attr_processer_;
-  typedef struct SchedPointInfo {
-    int sched_point_ms;
-    std::vector<int> v_core_set;
-  } SchedPointInfo;
-  std::vector<SchedPointInfo> v_sched_point_info;
+
 #ifdef ROSCH_H
   rosch::Analyzer analyzer;
 #endif

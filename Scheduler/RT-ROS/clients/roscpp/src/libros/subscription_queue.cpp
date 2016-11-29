@@ -38,10 +38,6 @@
 #define ROSCHEDULER
 #ifdef ROSCHEDULER
 #include "ros_rosch/event_notification.hpp"
-#include "ros_rosch/node_graph.hpp"
-#include "ros_rosch/sched_node.h"
-#include "ros_rosch/task_attribute_processer.h"
-#include "ros_rosch/type.h"
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <poll.h>
@@ -59,33 +55,7 @@ SubscriptionQueue::SubscriptionQueue(const std::string &topic,
       ,
       analyzer(rosch::get_node_name(), topic)
 #endif
-#ifdef ROSHCEDULER
-      ,
-      num_of_called_topics_(0), need_rt_(false)
-#endif
 {
-  std::string nodename = this_node::getName();
-  rosch::NodesInfo nodes_info;
-  node_info_ = nodes_info.getNodeInfo(nodename);
-
-  SchedPointInfo init_sched_point;
-  init_sched_point.sched_point_ms = 0;
-  for (int i(0); i < node_info_.v_sched_info.size(); ++i) {
-    bool is_exist_core(false);
-    for (int j(0); j < init_sched_point.v_core_set.size(); ++j) {
-      if (init_sched_point.v_core_set.at(j) ==
-          node_info_.v_sched_info.at(i).core)
-        is_exist_core = true;
-    }
-    if (!is_exist_core)
-      init_sched_point.v_core_set.push_back(node_info_.v_sched_info.at(i).core);
-  }
-  v_sched_point_info.push_back(init_sched_point);
-
-  SchedPointInfo sched_point;
-  for (int i(0); i < node_info_.v_sched_info.size(); ++i) {
-    sched_point.sched_point_ms = node_info_.v_sched_info.at(i).end_time;
-  }
 }
 
 SubscriptionQueue::~SubscriptionQueue() {}
@@ -199,15 +169,6 @@ CallbackInterface::CallResult SubscriptionQueue::call() {
     params.event = MessageEvent<void const>(
         msg, i.deserializer->getConnectionHeader(), i.receipt_time,
         i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-    for (int j(0); j < node_info_.v_subtopic.size(); ++j) {
-      if (topic_ == node_info_.v_subtopic.at(j))
-        ++num_of_called_topics_;
-    }
-    if (num_of_called_topics_ == node_info_.v_subtopic.size()) {
-      need_rt_ = true;
-      num_of_called_topics_ = 0;
-    }
-
     boost::thread app_th(
         boost::bind(&ros::SubscriptionQueue::appThread, this, i, params));
     //    i.helper->call(params);
@@ -226,13 +187,6 @@ void SubscriptionQueue::waitAppThread() {
 
 void SubscriptionQueue::appThread(Item i,
                                   SubscriptionCallbackHelperCallParams params) {
-  if (need_rt_) {
-    // std::vector<int> core_set;
-    // task_attr_processer_.setCoreAffinity(core_set);
-    task_attr_processer_.setRealtimePriority(
-        node_info_.v_sched_info.at(0).priority);
-  }
-
   i.helper->call(params);
   event_notification.signal();
   need_rt_ = false;
