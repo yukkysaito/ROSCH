@@ -189,7 +189,6 @@ void SubscriptionQueue::appThread(Item i,
                                   SubscriptionCallbackHelperCallParams params) {
   i.helper->call(params);
   event_notification.signal();
-  need_rt_ = false;
 }
 
 bool SubscriptionQueue::ready() { return true; }
