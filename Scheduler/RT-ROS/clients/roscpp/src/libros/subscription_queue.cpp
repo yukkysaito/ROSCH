@@ -38,6 +38,8 @@
 #define ROSCHEDULER
 #ifdef ROSCHEDULER
 #include "ros_rosch/event_notification.hpp"
+#include "ros_rosch/publish_counter.h"
+#include "ros_rosch/type.h"
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <poll.h>
@@ -55,7 +57,16 @@ SubscriptionQueue::SubscriptionQueue(const std::string &topic,
       ,
       analyzer(rosch::get_node_name(), topic)
 #endif
+#ifdef ROSCHEDULER
+      ,
+      sched_node_manager_(rosch::SingletonSchedNodeManager::getInstance())
+#endif
 {
+  // ROSCHEDULER
+  if (0 < sched_node_manager_.getNodeInfo().v_sched_info.size())
+    poll_time_ = sched_node_manager_.getNodeInfo().v_sched_info.at(0).run_time;
+  else
+    poll_time_ = 0;
 }
 
 SubscriptionQueue::~SubscriptionQueue() {}
@@ -180,9 +191,12 @@ CallbackInterface::CallResult SubscriptionQueue::call() {
 
 void SubscriptionQueue::waitAppThread() {
   int ret;
-  ret = event_notification.update(1000);
+  ret = event_notification.update(poll_time_);
+  if (ret != 1) {
+    std::cout << ret << std::endl;
+    ret = event_notification.update(1000);
+  }
   std::cout << ret << std::endl;
-  //   if(ret != 1)
 }
 
 void SubscriptionQueue::appThread(Item i,

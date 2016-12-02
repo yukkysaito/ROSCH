@@ -41,6 +41,7 @@
 // ROSCHEDULER
 #include "ros/subscription_callback_helper.h"
 #include "ros_rosch/event_notification.hpp"
+#include "ros_rosch/publish_counter.h"
 // ROSCH
 //#define ROSCH_H
 #ifdef ROSCH_H
@@ -105,6 +106,8 @@ private:
 
   // ROSCHEDULER
   rosch::EventNotification event_notification;
+  rosch::SingletonSchedNodeManager &sched_node_manager_;
+  int poll_time_;
 
 #ifdef ROSCH_H
   rosch::Analyzer analyzer;

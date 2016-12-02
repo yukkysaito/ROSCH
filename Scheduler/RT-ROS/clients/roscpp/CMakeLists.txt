@@ -115,6 +115,7 @@ add_library(roscpp
   src/libros/service.cpp
   src/libros/this_node.cpp
   src/librosch/node_graph.cpp
+  src/librosch/publish_counter.cpp
   # src/librosch/bridge.cpp
   # src/librosch/analyzer.cpp
   # src/librosch/time.cpp
