@@ -11,6 +11,7 @@ GPATH
 # ROSCH
 *.[ao]
 *.so
+*.gch
 *.so.*
 *.order
 *.symvers
