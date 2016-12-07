@@ -107,7 +107,6 @@ private:
   // ROSCHEDULER
   rosch::EventNotification event_notification;
   rosch::SingletonSchedNodeManager &sched_node_manager_;
-  int poll_time_;
 
 #ifdef ROSCH_H
   rosch::Analyzer analyzer;

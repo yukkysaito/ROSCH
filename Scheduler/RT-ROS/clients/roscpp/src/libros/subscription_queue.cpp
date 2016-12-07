@@ -42,7 +42,9 @@
 #include "ros_rosch/type.h"
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
+#include <boost/timer/timer.hpp>
 #include <poll.h>
+#include <resch/api.h>
 #include <ros/ros.h>
 #endif
 
@@ -62,11 +64,6 @@ SubscriptionQueue::SubscriptionQueue(const std::string &topic,
       sched_node_manager_(rosch::SingletonSchedNodeManager::getInstance())
 #endif
 {
-  // ROSCHEDULER
-  if (0 < sched_node_manager_.getNodeInfo().v_sched_info.size())
-    poll_time_ = sched_node_manager_.getNodeInfo().v_sched_info.at(0).run_time;
-  else
-    poll_time_ = 0;
 }
 
 SubscriptionQueue::~SubscriptionQueue() {}
@@ -176,27 +173,68 @@ CallbackInterface::CallResult SubscriptionQueue::call() {
     {
     }
     SubscriptionCallbackHelperCallParams params;
-
     params.event = MessageEvent<void const>(
         msg, i.deserializer->getConnectionHeader(), i.receipt_time,
         i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
-    boost::thread app_th(
-        boost::bind(&ros::SubscriptionQueue::appThread, this, i, params));
-    //    i.helper->call(params);
-    waitAppThread();
+
+    std::cout << "-------------------------------------" << std::endl;
+    if (sched_node_manager_.subscribe_counter.removeRemainSubTopic(topic_)) {
+      boost::thread app_th(
+          boost::bind(&ros::SubscriptionQueue::appThread, this, i, params));
+      waitAppThread();
+    } else {
+      i.helper->call(params);
+    }
+    std::cout << "-------------------------------------" << std::endl;
+    if (0 == sched_node_manager_.subscribe_counter.getRemainSubTopicSize()) {
+      sched_node_manager_.subscribe_counter.resetRemainSubTopic();
+      sched_node_manager_.publish_counter.resetRemainPubTopic();
+      sched_node_manager_.resetDeadlineMiss();
+      sched_node_manager_.resetPollTime();
+      std::cout
+          << "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+          << std::endl;
+    }
   }
 
   return CallbackInterface::Success;
 }
 
+// ROSCHEDULER
 void SubscriptionQueue::waitAppThread() {
+  boost::timer::cpu_timer timer;
   int ret;
-  ret = event_notification.update(poll_time_);
+  int prio = 99;
+  ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
+  ros_rt_set_priority(prio);
+
+  ret = event_notification.update(sched_node_manager_.getPollTime());
+  std::cout << "Poll time: " << sched_node_manager_.getPollTime() << std::endl;
   if (ret != 1) {
-    std::cout << ret << std::endl;
-    ret = event_notification.update(1000);
+    std::cout << "==== Deadline miss!! ====" << std::endl;
+    std::cout << "Remain Topics: "
+              << sched_node_manager_.publish_counter.getRemainPubTopicSize()
+              << "/" << sched_node_manager_.publish_counter.getPubTopicSize()
+              << std::endl;
+    sched_node_manager_.missedDeadline();
+    sched_node_manager_.runFailSafeFunction();
+    std::cout << "========================" << std::endl;
+    ret = event_notification.update(-1);
+  } else {
+    std::cout << "==== Finished before the deadline ====" << std::endl;
+    std::cout << "Remain Topics: "
+              << sched_node_manager_.publish_counter.getRemainPubTopicSize()
+              << "/" << sched_node_manager_.publish_counter.getPubTopicSize()
+              << std::endl;
+    std::cout << "========================" << std::endl;
   }
-  std::cout << ret << std::endl;
+
+  int elapsed_time_ms = (int)((double)timer.elapsed().wall) / 1000000.0;
+  sched_node_manager_.subPollTime(elapsed_time_ms);
+  std::cout << "Elapsed time: " << elapsed_time_ms << std::endl
+            << "Remain poll time:" << sched_node_manager_.getPollTime()
+            << std::endl;
+  ros_rt_set_scheduler(SCHED_FAIR); /* you can also set SCHED_EDF. */
 }
 
 void SubscriptionQueue::appThread(Item i,

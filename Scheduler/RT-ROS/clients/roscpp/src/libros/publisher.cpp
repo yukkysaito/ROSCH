@@ -70,9 +70,21 @@ Publisher::~Publisher() {}
 void Publisher::publish(const boost::function<SerializedMessage(void)> &serfunc,
                         SerializedMessage &m) const {
   // ROSCHEDULER
-  if (rosch::SingletonSchedNodeManager::getInstance()
-          .publish_counter.removeRemainPubTopic(impl_->topic_))
-    std::cout << "success" << std::endl;
+  rosch::SingletonSchedNodeManager &sched_node_manager(
+      rosch::SingletonSchedNodeManager::getInstance());
+  if (sched_node_manager.isFailSafeFunction()) {
+    if (!sched_node_manager.publish_counter.isRemainPubTopic(impl_->topic_))
+      return;
+  } else {
+    sched_node_manager.publish_counter.removeRemainPubTopic(impl_->topic_);
+    if (sched_node_manager.isDeadlineMiss()) {
+      std::cout << "Cannot publish the topic(" << impl_->topic_ << ")."
+                << "Because already missed deadline." << std::endl;
+      return;
+    }
+  }
+  std::cout << "Published topic:" << impl_->topic_ << std::endl;
+
   if (!impl_) {
     ROS_ASSERT_MSG(false,
                    "Call to publish() on an invalid Publisher (topic [%s])",

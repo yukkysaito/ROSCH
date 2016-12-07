@@ -134,6 +134,8 @@ target_link_libraries(roscpp
   ${Boost_LIBRARIES}
   yaml-cpp
   /usr/lib/resch/libresch.a
+  boost_timer
+  boost_system
   )
 
 #explicitly install library and includes

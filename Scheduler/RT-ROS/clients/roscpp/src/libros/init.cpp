@@ -69,6 +69,7 @@
 #include "ros_rosch/node_graph.hpp"
 #include "ros_rosch/publish_counter.h"
 #include "ros_rosch/type.h"
+#include <resch/api.h>
 //#define __RESCH_DEBUG__
 /* Node graph */
 //#include "ros_rosch/node_graph.hpp"
@@ -420,6 +421,7 @@ void init(const M_string &remappings, const std::string &name,
     /* RESCHECULER
      * init
      */
+    ros_rt_init(name.c_str());
     const std::string nodename(this_node::getName());
     rosch::NodesInfo nodes_info;
     NodeInfo node_info(nodes_info.getNodeInfo(nodename));

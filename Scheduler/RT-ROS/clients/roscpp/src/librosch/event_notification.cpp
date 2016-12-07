@@ -79,7 +79,7 @@ void EventNotification::signal() {
   boost::mutex::scoped_try_lock lock(signal_mutex_);
 
   if (lock.owns_lock()) {
-    char b = 0;
+    char b = '0';
     //    if (write_signal(signal_pipe_[1], &b, 1) < 0)
     if (write(signal_pipe_[1], &b, 1) < 0) {
       // do nothing... this prevents warnings on gcc 4.3
@@ -126,6 +126,7 @@ void EventNotification::onLocalPipeEvents(int events) {
     char b;
     //    while(read_signal(signal_pipe_[0], &b, 1) > 0)
     while (read(signal_pipe_[0], &b, 1) > 0) {
+      // std::cout << "read bite : " << b << std::endl;
       // do nothing keep draining
     };
   }
