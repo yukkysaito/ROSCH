@@ -44,7 +44,6 @@
 #include <boost/thread.hpp>
 #include <boost/timer/timer.hpp>
 #include <poll.h>
-#include <resch/api.h>
 #include <ros/ros.h>
 #endif
 
@@ -191,6 +190,7 @@ CallbackInterface::CallResult SubscriptionQueue::call() {
       sched_node_manager_.publish_counter.resetRemainPubTopic();
       sched_node_manager_.resetDeadlineMiss();
       sched_node_manager_.resetPollTime();
+      sched_node_manager_.resetFailSafeFunction();
       std::cout
           << "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
           << std::endl;
@@ -204,9 +204,6 @@ CallbackInterface::CallResult SubscriptionQueue::call() {
 void SubscriptionQueue::waitAppThread() {
   boost::timer::cpu_timer timer;
   int ret;
-  int prio = 99;
-  ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
-  ros_rt_set_priority(prio);
 
   ret = event_notification.update(sched_node_manager_.getPollTime());
   std::cout << "Poll time: " << sched_node_manager_.getPollTime() << std::endl;
@@ -217,9 +214,13 @@ void SubscriptionQueue::waitAppThread() {
               << "/" << sched_node_manager_.publish_counter.getPubTopicSize()
               << std::endl;
     sched_node_manager_.missedDeadline();
-    sched_node_manager_.runFailSafeFunction();
+    if (!sched_node_manager_.isRanFailSafeFunction())
+      sched_node_manager_.runFailSafeFunction();
     std::cout << "========================" << std::endl;
+    TaskAttributeProcesser task_attr_proc;
+    task_attr_proc.setDefaultScheduling(v_pid);
     ret = event_notification.update(-1);
+    task_attr_proc.setCoreAffinity(sched_node_manager_.getUseCores());
   } else {
     std::cout << "==== Finished before the deadline ====" << std::endl;
     std::cout << "Remain Topics: "
@@ -234,7 +235,6 @@ void SubscriptionQueue::waitAppThread() {
   std::cout << "Elapsed time: " << elapsed_time_ms << std::endl
             << "Remain poll time:" << sched_node_manager_.getPollTime()
             << std::endl;
-  ros_rt_set_scheduler(SCHED_FAIR); /* you can also set SCHED_EDF. */
 }
 
 void SubscriptionQueue::appThread(Item i,

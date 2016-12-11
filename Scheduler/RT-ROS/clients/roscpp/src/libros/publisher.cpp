@@ -72,7 +72,7 @@ void Publisher::publish(const boost::function<SerializedMessage(void)> &serfunc,
   // ROSCHEDULER
   rosch::SingletonSchedNodeManager &sched_node_manager(
       rosch::SingletonSchedNodeManager::getInstance());
-  if (sched_node_manager.isFailSafeFunction()) {
+  if (sched_node_manager.isRunningFailSafeFunction()) {
     if (!sched_node_manager.publish_counter.isRemainPubTopic(impl_->topic_))
       return;
   } else {

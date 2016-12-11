@@ -136,6 +136,8 @@ target_link_libraries(roscpp
   /usr/lib/resch/libresch.a
   boost_timer
   boost_system
+  rt
+  pthread
   )
 
 #explicitly install library and includes

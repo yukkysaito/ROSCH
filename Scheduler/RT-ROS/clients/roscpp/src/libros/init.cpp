@@ -68,8 +68,61 @@
 //#include <resch/api.h>
 #include "ros_rosch/node_graph.hpp"
 #include "ros_rosch/publish_counter.h"
+#include "ros_rosch/task_attribute_processer.h"
 #include "ros_rosch/type.h"
-#include <resch/api.h>
+#if 0
+// RESCHECULER SCHED_DEADLINE
+// #define _GNU_SOURCE
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <linux/unistd.h>
+#include <pthread.h>
+#include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#define SCHED_DEADLINE 6
+/* XXX use the proper syscall numbers */
+#ifdef __x86_64__
+#define __NR_sched_setattr 314
+#define __NR_sched_getattr 315
+#endif
+#ifdef __i386__
+#define __NR_sched_setattr 351
+#define __NR_sched_getattr 352
+#endif
+#ifdef __arm__
+#define __NR_sched_setattr 380
+#define __NR_sched_getattr 381
+#endif
+struct sched_attr {
+  __u32 size;
+  __u32 sched_policy;
+  __u64 sched_flags;
+  /* SCHED_NORMAL, SCHED_BATCH */
+  __s32 sched_nice;
+  /* SCHED_FIFO, SCHED_RR */
+  __u32 sched_priority;
+  /* SCHED_DEADLINE (nsec) */
+  __u64 sched_runtime;
+  __u64 sched_deadline;
+  __u64 sched_period;
+};
+
+int sched_setattr(pid_t pid, const struct sched_attr *attr,
+                  unsigned int flags) {
+  return syscall(__NR_sched_setattr, pid, attr, flags);
+}
+int sched_getattr(pid_t pid, struct sched_attr *attr, unsigned int size,
+                  unsigned int flags) {
+  return syscall(__NR_sched_getattr, pid, attr, size, flags);
+}
+
+#endif
 //#define __RESCH_DEBUG__
 /* Node graph */
 //#include "ros_rosch/node_graph.hpp"
@@ -421,11 +474,19 @@ void init(const M_string &remappings, const std::string &name,
     /* RESCHECULER
      * init
      */
-    ros_rt_init(name.c_str());
+
     const std::string nodename(this_node::getName());
     rosch::NodesInfo nodes_info;
     NodeInfo node_info(nodes_info.getNodeInfo(nodename));
-    rosch::SingletonSchedNodeManager::getInstance().init(node_info);
+    rosch::SingletonSchedNodeManager &sched_node_manager(
+        rosch::SingletonSchedNodeManager::getInstance());
+    sched_node_manager.init(node_info);
+
+    rosch::TaskAttributeProcesser task_attr_proc;
+    std::vector<pid_t> v_pid;
+    v_pid.push_back(0);
+    task_attr_proc.setCoreAffinity(sched_node_manager.getUseCores());
+    task_attr_proc.setRealtimePriority(v_pid, sched_node_manager.getPriority());
     {
       std::cout << "==== Node Infomation ====" << std::endl
                 << "Name:" << node_info.name << std::endl;
@@ -442,12 +503,36 @@ void init(const M_string &remappings, const std::string &name,
       }
       std::cout << "=========================" << std::endl;
     }
+#if 0
+// RESCHECULER SCHED_DEADLINE
+    struct sched_attr attr;
+    int ret;
+    unsigned int flags = 0;
+
+    attr.size = sizeof(attr);
+    attr.sched_flags = 0;
+    attr.sched_nice = 0;
+    attr.sched_priority = 0;
+
+    /* creates a 10ms/30ms reservation */
+    attr.sched_policy = SCHED_DEADLINE;
+    attr.sched_runtime = 10 * 1000 * 1000;
+    attr.sched_period = 30 * 1000 * 1000;
+    attr.sched_deadline = 30 * 1000 * 1000;
+    ret = sched_setattr(0, &attr, flags);
+    std::cerr << ret << std::endl;
+    if (ret < 0) {
+      perror("sched_setattr");
+      exit(-1);
+    }
+#endif
 #ifdef __RESCH_DEBUG__
     /*
      * remappings: mean remapping topics
      * name: mean myself node name
      * options: ?
      */
+
     M_string::const_iterator it = remappings.begin();
     for (; it != remappings.end(); it++) {
       std::cout << "remmappings: " << it->first << ", " << it->second
@@ -455,6 +540,7 @@ void init(const M_string &remappings, const std::string &name,
     }
     std::cout << "name: " << name << std::endl;
     std::cout << "options: " << options << std::endl;
+
 #endif /* RESCH DEBUG */
     g_initialized = true;
   }

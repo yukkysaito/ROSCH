@@ -2,7 +2,9 @@
 #define PUBLISH_COUNTER_H
 
 #include "type.h"
+#include <iostream>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
 namespace rosch {
@@ -16,6 +18,7 @@ private:
   int poll_time_ms_;
   bool missed_deadline_;
   bool running_fail_safe_function_;
+  bool ran_fail_safe_function_;
 
   class PublishCounter {
   private:
@@ -43,28 +46,11 @@ private:
     bool removeRemainSubTopic(const std::string &topic_name);
     void resetRemainSubTopic();
   };
-  // class SchedulerSetter {
-  //   void set_rt() {
-  //     cpu_set_t mask;
-  //     CPU_ZERO(&mask);
-  //     int index = graph_analyzer_->get_node_index(node_name_);
-  //     set_affinity(core_count_manager_->get_core());
-  //     int prio = 99;
-  //     ros_rt_set_scheduler(SCHED_FP); /* you can also set SCHED_EDF. */
-  //     ros_rt_set_priority(prio);
-  //   }
-  //
-  //   void set_fair() {
-  //     cpu_set_t mask;
-  //     CPU_ZERO(&mask);
-  //     int core_max = sysconf(_SC_NPROCESSORS_CONF);
-  //     set_affinity(core_max);
-  //     ros_rt_set_scheduler(SCHED_FAIR); /* you can also set SCHED_EDF. */
-  //   }
-  // }
 
 public:
   static SingletonSchedNodeManager &getInstance();
+  PublishCounter publish_counter;
+  SubscribeCounter subscribe_counter;
   NodeInfo getNodeInfo();
   void setNodeInfo(const NodeInfo &node_info);
   void subPollTime(int time_ms);
@@ -74,11 +60,14 @@ public:
   void missedDeadline();
   bool isDeadlineMiss();
   void resetDeadlineMiss();
-  PublishCounter publish_counter;
-  SubscribeCounter subscribe_counter;
+  std::vector<int> getUseCores();
+  int getPriority();
   void runFailSafeFunction();
-  bool isFailSafeFunction();
+  bool isRunningFailSafeFunction();
+  bool isRanFailSafeFunction();
+  void resetFailSafeFunction();
   void (*func)(void);
+  std::vector<pid_t> v_pid;
 };
 }
 

@@ -4,7 +4,8 @@ using namespace rosch;
 
 SingletonSchedNodeManager::SingletonSchedNodeManager()
     : publish_counter(this), subscribe_counter(this), poll_time_ms_(0),
-      missed_deadline_(false), func(NULL), running_fail_safe_function_(false) {}
+      missed_deadline_(false), func(NULL), ran_fail_safe_function_(false),
+      running_fail_safe_function_(false) {}
 SingletonSchedNodeManager::~SingletonSchedNodeManager() {}
 
 SingletonSchedNodeManager &SingletonSchedNodeManager::getInstance() {
@@ -34,14 +35,35 @@ bool SingletonSchedNodeManager::isDeadlineMiss() { return missed_deadline_; }
 void SingletonSchedNodeManager::resetDeadlineMiss() {
   missed_deadline_ = false;
 }
+void SingletonSchedNodeManager::resetFailSafeFunction() {
+  ran_fail_safe_function_ = false;
+}
 void SingletonSchedNodeManager::runFailSafeFunction() {
   running_fail_safe_function_ = true;
   if (func)
     func();
   running_fail_safe_function_ = false;
+  ran_fail_safe_function_ = true;
 }
-bool SingletonSchedNodeManager::isFailSafeFunction() {
+bool SingletonSchedNodeManager::isRunningFailSafeFunction() {
   return running_fail_safe_function_;
+}
+bool SingletonSchedNodeManager::isRanFailSafeFunction() {
+  return ran_fail_safe_function_;
+}
+std::vector<int> SingletonSchedNodeManager::getUseCores() {
+  std::vector<int> v_core;
+  for (int i = 0; i < (int)node_info_.v_sched_info.size(); ++i) {
+    v_core.push_back(node_info_.v_sched_info.at(i).core);
+  }
+  return v_core;
+}
+
+int SingletonSchedNodeManager::getPriority() {
+  if (node_info_.v_sched_info.size() > 0)
+    return node_info_.v_sched_info.at(0).priority;
+  else
+    return -1;
 }
 
 SingletonSchedNodeManager::PublishCounter::PublishCounter(
