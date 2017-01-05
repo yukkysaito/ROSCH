@@ -39,6 +39,7 @@
 #ifdef ROSCHEDULER
 #include "ros_rosch/event_notification.hpp"
 #include "ros_rosch/publish_counter.h"
+#include "ros_rosch/task_attribute_processer.h"
 #include "ros_rosch/type.h"
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -217,8 +218,8 @@ void SubscriptionQueue::waitAppThread() {
     if (!sched_node_manager_.isRanFailSafeFunction())
       sched_node_manager_.runFailSafeFunction();
     std::cout << "========================" << std::endl;
-    TaskAttributeProcesser task_attr_proc;
-    task_attr_proc.setDefaultScheduling(v_pid);
+    rosch::TaskAttributeProcesser task_attr_proc;
+    task_attr_proc.setDefaultScheduling(sched_node_manager_.v_pid);
     ret = event_notification.update(-1);
     task_attr_proc.setCoreAffinity(sched_node_manager_.getUseCores());
   } else {

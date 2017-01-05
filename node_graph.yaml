@@ -1,15 +1,15 @@
-- nodename: /listener
-  core : 3
-  sub_topic:
-  - /chatter
-  - /chatter2
-  pub_topic:
-  - /chatter_1000
-  run_time : 10
-  sched_info: # please write run_time
-    - core : 1
-      priority : 99
-      run_time : 10
+# - nodename: /listener
+#   core : 3
+#   sub_topic:
+#   - /chatter
+#   - /chatter2
+#   pub_topic:
+#   - /chatter_1000
+#   run_time : 10
+#   sched_info: # please write run_time
+#     - core : 1
+#       priority : 99
+#       run_time : 10
 
 # - nodename: /velodyne_driver
 #   nodeindex: 33
@@ -53,7 +53,7 @@
 #
 # - nodename: /ndt_matching
 #   nodeindex: 31
-#   core : 4
+#   core : 10
 #   sub_topic:
 #   - /filtered_points
 #   pub_topic:
@@ -63,7 +63,7 @@
 #
 # - nodename: /euclidean_cluster
 #   nodeindex: 41
-#   core : 1
+#   core : 2
 #   sub_topic:
 #   - /vscan_points
 #   pub_topic:
@@ -75,7 +75,7 @@
 #   nodeindex: 32
 #   core : 1
 #   sub_topic:
-#   - /points_raw
+#   - /sync_drivers/points_raw
 #   pub_topic:
 #   - /filtered_points
 #   run_time : 3
@@ -85,23 +85,33 @@
 #   nodeindex: 34
 #   core : 1
 #   sub_topic:
-#   - /points_raw
+#   - /sync_drivers/points_raw
 #   pub_topic:
 #   - /vscan_points
 #   run_time : 2
 #   sched_info:
 #
-# - nodename: /points2image
+# - nodename: /vscan2image
 #   nodeindex: 35
 #   core : 1
 #   sub_topic:
-#   - /points_raw
+#   - /vscan_points
 #   pub_topic:
 #   - /points_image
 #   run_time : 30
 #   sched_info:
-#
-# - nodename: /obj_car/dpm
+
+# - nodename: /points2image
+#   nodeindex: 35
+#   core : 1
+#   sub_topic:
+#   - /sync_drivers/points_raw
+#   pub_topic:
+#   - /points_image
+#   run_time : 30
+#   sched_info:
+
+# - nodename: /ssd
 #   nodeindex: 36
 #   core : 1
 #   sub_topic:
@@ -110,28 +120,29 @@
 #   - /obj_car/image_obj
 #   run_time : 1
 #   sched_info:
-#
+
 # - nodename: /obj_car/ranging
 #   nodeindex: 36
 #   core : 1
 #   sub_topic:
-#   - /obj_car/image_obj
-#   - /points_image
+#   - /sync_ranging/obj_car/image_obj
+#   - /sync_ranging/obj_car/vscan_image
 #   pub_topic:
 #   - /obj_car/image_obj_ranged
 #   run_time : 5
 #   sched_info:
-#
-# - nodename: /obj_car/tracking
-#   nodeindex: 36
-#   core : 1
-#   sub_topic:
-#   - /obj_car/image_obj_ranged
-#   pub_topic:
-#   - /obj_car/image_obj_tracked
-#   run_time : 18
-#   sched_info:
-#
+
+- nodename: /obj_car/tracking
+  nodeindex: 36
+  core : 1
+  sub_topic:
+  - /sync_tracking/obj_car/image_obj_ranged
+  - /sync_tracking/obj_car/image_raw
+  pub_topic:
+  - /obj_car/image_obj_tracked
+  run_time : 18
+  sched_info:
+
 # - nodename: /obj_car/fusion
 #   nodeindex: 36
 #   core : 1
