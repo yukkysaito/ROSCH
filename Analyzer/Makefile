@@ -14,6 +14,7 @@ ifeq "$(strip $(SRCDIR))" ""
 endif
 SOURCES   = $(wildcard $(SRCDIR)/*.cpp)
 OBJDIR    = ./obj
+BINDIR    = ./bin
 ifeq "$(strip $(OBJDIR))" ""
   OBJDIR  = .
 endif
@@ -25,6 +26,7 @@ $(TARGET): $(OBJECTS) $(LIBS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	-mkdir -p $(OBJDIR)
+	-mkdir -p $(BINDIR)
 	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
 all: clean $(TARGET)

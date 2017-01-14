@@ -28,7 +28,7 @@ public:
   int get_spec_core();
   int show_sched_cpu_tasks();
   spec_t get_spec();
-  int get_cpu_taskset(std::vector<V_sched_node>& v_sched_cpu_task);
+  int get_cpu_taskset(std::vector<V_sched_node> &v_sched_cpu_task);
   int get_node_list_size();
   int get_node_name(int index, std::string &node_name);
 
@@ -68,6 +68,15 @@ private:
   int set_sched_vacancy_node(
       const int index, const int run_time,
       const sched_v_node_info_t &sched_vacancy_node_info);
+  int get_sched_node_info_in_selected_cores(const int min_start_time,
+                                            sched_node_info_t &sched_node_info,
+                                            std::vector<int> v_can_use_core);
+  int get_sched_vacancy_node_info_in_selected_cores(
+      const int run_time, const int min_start_time,
+      sched_v_node_info_t &sched_vacancy_node_info,
+      std::vector<int> v_can_use_core);
+  void get_can_use_core(const std::vector<int> &v_used_core,
+                        std::vector<int> *v_can_use);
   SingletonNodeGraphAnalyzer &node_graph_analyzer_;
   std::vector<V_sched_node> v_sched_cpu_task_;
   std::vector<node_t> node_queue_;
