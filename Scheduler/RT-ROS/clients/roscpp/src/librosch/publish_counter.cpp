@@ -5,7 +5,8 @@ using namespace rosch;
 SingletonSchedNodeManager::SingletonSchedNodeManager()
     : publish_counter(this), subscribe_counter(this), poll_time_ms_(0),
       missed_deadline_(false), func(NULL), ran_fail_safe_function_(false),
-      running_fail_safe_function_(false) {}
+      running_fail_safe_function_(false),
+      publish_even_if_missed_deadline_(false) {}
 SingletonSchedNodeManager::~SingletonSchedNodeManager() {}
 
 SingletonSchedNodeManager &SingletonSchedNodeManager::getInstance() {
@@ -38,6 +39,15 @@ void SingletonSchedNodeManager::resetDeadlineMiss() {
 void SingletonSchedNodeManager::resetFailSafeFunction() {
   ran_fail_safe_function_ = false;
 }
+
+bool SingletonSchedNodeManager::publishEvenIfMissedDeadline() {
+  return publish_even_if_missed_deadline_;
+}
+void SingletonSchedNodeManager::setPublishEvenIfMissedDeadline(
+    bool can_publish) {
+  publish_even_if_missed_deadline_ = can_publish;
+}
+
 void SingletonSchedNodeManager::runFailSafeFunction() {
   running_fail_safe_function_ = true;
   if (func)

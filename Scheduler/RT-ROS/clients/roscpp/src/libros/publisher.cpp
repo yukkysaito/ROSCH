@@ -77,7 +77,8 @@ void Publisher::publish(const boost::function<SerializedMessage(void)> &serfunc,
       return;
   } else {
     sched_node_manager.publish_counter.removeRemainPubTopic(impl_->topic_);
-    if (sched_node_manager.isDeadlineMiss()) {
+    if (sched_node_manager.isDeadlineMiss() &&
+        !(sched_node_manager.publishEvenIfMissedDeadline())) {
       std::cout << "Cannot publish the topic(" << impl_->topic_ << ")."
                 << "Because already missed deadline." << std::endl;
       return;

@@ -19,7 +19,7 @@ private:
   bool missed_deadline_;
   bool running_fail_safe_function_;
   bool ran_fail_safe_function_;
-
+  bool publish_even_if_missed_deadline_;
   class PublishCounter {
   private:
     std::vector<std::string> v_remain_pubtopic_;
@@ -66,6 +66,8 @@ public:
   bool isRunningFailSafeFunction();
   bool isRanFailSafeFunction();
   void resetFailSafeFunction();
+  bool publishEvenIfMissedDeadline();
+  void setPublishEvenIfMissedDeadline(bool can_publish);
   void (*func)(void);
   std::vector<pid_t> v_pid;
 };

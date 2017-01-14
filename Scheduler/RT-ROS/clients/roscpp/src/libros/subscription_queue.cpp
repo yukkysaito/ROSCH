@@ -207,7 +207,8 @@ void SubscriptionQueue::waitAppThread() {
   int ret;
 
   ret = event_notification.update(sched_node_manager_.getPollTime());
-  std::cout << "Poll time: " << sched_node_manager_.getPollTime() << std::endl;
+  //  std::cout << "Poll time: " << sched_node_manager_.getPollTime() <<
+  //  std::endl;
   if (ret != 1) {
     std::cout << "==== Deadline miss!! ====" << std::endl;
     std::cout << "Remain Topics: "
